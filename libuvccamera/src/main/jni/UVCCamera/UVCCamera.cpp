@@ -2231,8 +2231,9 @@ int UVCCamera::setAnalogVideoLockState(int state) {
 int UVCCamera::getAnalogVideoLockState() {
 	ENTER();
 	if (mPUSupports & PU_AVIDEO_LOCK) {
-		int ret = update_ctrl_values(mDeviceHandle, mAnalogVideoLockState, uvc_get_analog_video_lockstate);
-		if (LIKELY(!ret)) {	// 正常に最小・最大値を取得出来た時
+		int ret = update_ctrl_values(mDeviceHandle, mAnalogVideoLockState,
+									 uvc_get_analog_video_lockstate);
+		if (LIKELY(!ret)) {    // 正常に最小・最大値を取得出来た時
 			uint8_t status;
 			ret = uvc_get_analog_video_lockstate(mDeviceHandle, &status, UVC_GET_CUR);
 //			LOGI("status:%d", status);
@@ -2241,4 +2242,43 @@ int UVCCamera::getAnalogVideoLockState() {
 		}
 	}
 	RETURN(0, int);
+}
+
+void probeFunc(int w, int h, int maxFPS, int format, void *userdata) {
+	if (userdata == NULL) {
+		return;
+	}
+	UVCCamera *cam = reinterpret_cast<UVCCamera*>(userdata);
+	
+	FrameFormatInfo fmt;
+	
+	fmt.frameWidth = w;
+    fmt.frameHeight = h;
+    fmt.maxFPS = maxFPS;
+    fmt.frameTransferFormat = format;
+	
+	cam->addSupportedFormat(fmt);
+}
+
+void UVCCamera::addSupportedFormat(FrameFormatInfo &fmt) {
+	internalFormats.push_back(fmt);
+}
+
+int UVCCamera::getSupportedFormats(JNIEnv *env, std::vector<FrameFormatInfo> &formats) {
+	ENTER();
+	int result = -1;
+	
+	if (!mDeviceHandle) {
+		RETURN(result, int);
+	}
+
+	internalFormats.clear();
+	formats.clear();
+	uvc_get_stream_ctrl_formats(mDeviceHandle, probeFunc, this);
+	for (int i = 0; i < internalFormats.size(); i++) {
+		formats.push_back(internalFormats[i]);
+	}
+	
+	result = 0;
+	RETURN(result, int);
 }

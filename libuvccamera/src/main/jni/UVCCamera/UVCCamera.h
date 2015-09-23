@@ -33,6 +33,7 @@
 #include <android/native_window.h>
 #include "UVCStatusCallback.h"
 #include "UVCButtonCallback.h"
+#include <vector>
 #include "UVCPreview.h"
 
 #define	CTRL_SCANNING		0x000001	// D0:  Scanning Mode
@@ -107,6 +108,14 @@ typedef uvc_error_t (*paramset_func_i8u8)(uvc_device_handle_t *devh, int8_t valu
 typedef uvc_error_t (*paramset_func_i8u8u8)(uvc_device_handle_t *devh, int8_t value1, uint8_t value2, uint8_t value3);
 typedef uvc_error_t (*paramset_func_i32i32)(uvc_device_handle_t *devh, int32_t value1, int32_t value2);
 
+struct FrameFormatInfo {
+public:
+	int frameWidth;
+    int frameHeight;
+    int maxFPS;
+    int frameTransferFormat;
+};
+
 class UVCCamera {
 	char *mUsbFs;
 	uvc_context_t *mContext;
@@ -118,6 +127,9 @@ class UVCCamera {
 	UVCPreview *mPreview;
 	uint64_t mCtrlSupports;
 	uint64_t mPUSupports;
+
+	std::vector<FrameFormatInfo> internalFormats;
+
 	control_value_t mScanningMode;
 	control_value_t mExposureMode;
 	control_value_t mExposurePriority;
@@ -193,7 +205,9 @@ public:
 	int startPreview();
 	int stopPreview();
 	int setCaptureDisplay(ANativeWindow *capture_window);
-
+	int getSupportedFormats(JNIEnv *env, std::vector<FrameFormatInfo> &formats);
+	void addSupportedFormat(FrameFormatInfo &fmt);
+	
 	int getCtrlSupports(uint64_t *supports);
 	int getProcSupports(uint64_t *supports);
 

@@ -183,17 +183,23 @@ public class UVCCamera {
      * USB permission is necessary before this method is called
      * @param ctrlBlock
      */
-    public void open(final UsbControlBlock ctrlBlock) {
+    public boolean open(final UsbControlBlock ctrlBlock) {
 		mCtrlBlock = ctrlBlock;
-		nativeConnect(mNativePtr,
+		if (nativeConnect(mNativePtr,
 			mCtrlBlock.getVenderId(), mCtrlBlock.getProductId(),
 			mCtrlBlock.getFileDescriptor(),
-			getUSBFSName(mCtrlBlock));
+			getUSBFSName(mCtrlBlock)) != 0) {
+
+            return false;
+        }
     	if (mNativePtr != 0 && TextUtils.isEmpty(mSupportedSize)) {
     		mSupportedSize = nativeGetSupportedSize(mNativePtr);
     	}
-		nativeSetPreviewSize(mNativePtr, DEFAULT_PREVIEW_WIDTH, DEFAULT_PREVIEW_HEIGHT,
-			DEFAULT_PREVIEW_MIN_FPS, DEFAULT_PREVIEW_MAX_FPS, DEFAULT_PREVIEW_MODE, DEFAULT_BANDWIDTH);
+		if (nativeSetPreviewSize(mNativePtr, DEFAULT_PREVIEW_WIDTH, DEFAULT_PREVIEW_HEIGHT,
+				DEFAULT_PREVIEW_MIN_FPS, DEFAULT_PREVIEW_MAX_FPS, DEFAULT_PREVIEW_MODE, DEFAULT_BANDWIDTH) != 0) {
+            return false;
+        }
+        return true;
     }
 
 	/**
@@ -361,9 +367,9 @@ public class UVCCamera {
      * this method require API >= 14
      * @param texture
      */
-    public void setPreviewTexture(final SurfaceTexture texture) {	// API >= 11
+    public boolean setPreviewTexture(final SurfaceTexture texture) {	// API >= 11
     	final Surface surface = new Surface(texture);	// XXX API >= 14
-    	nativeSetPreviewDisplay(mNativePtr, surface);
+    	return nativeSetPreviewDisplay(mNativePtr, surface) == 0;
     }
 
     /**
@@ -388,10 +394,11 @@ public class UVCCamera {
     /**
      * start preview
      */
-    public void startPreview() {
+    public boolean startPreview() {
     	if (mCtrlBlock != null) {
-    		nativeStartPreview(mNativePtr);
+    		return nativeStartPreview(mNativePtr) == 0;
     	}
+        return false;
     }
 
     /**
@@ -402,6 +409,16 @@ public class UVCCamera {
     	if (mCtrlBlock != null) {
     		nativeStopPreview(mNativePtr);
     	}
+    }
+
+    /**
+     * get supported frame formats of the camera.
+     */
+    public FrameFormatInfo[] getSupportedFormats() {
+        if (mCtrlBlock != null) {
+            return nativeGetSupportedFormats(mNativePtr);
+        }
+        return new FrameFormatInfo[0];
     }
 
     /**
@@ -1135,6 +1152,8 @@ public class UVCCamera {
     private final native int nativeUpdateContrastLimit(final long id_camera);
     private static final native int nativeSetContrast(final long id_camera, final int contrast);
     private static final native int nativeGetContrast(final long id_camera);
+
+    private static final native FrameFormatInfo[] nativeGetSupportedFormats(final long id_camera);
 
 	private final native int nativeUpdateAutoContrastLimit(final long id_camera);
     private static final native int nativeSetAutoContrast(final long id_camera, final boolean autocontrast);
