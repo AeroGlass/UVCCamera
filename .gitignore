@@ -31,3 +31,17 @@ local.properties
 
 # gedit
 *~
+
+# Android-studio
+local.properties
+*.apk
+*.ap_
+*.dex
+*.class
+*.iml
+.idea
+
+# Build
+build
+*/build
+libuvccamera/src/main/libs/**
