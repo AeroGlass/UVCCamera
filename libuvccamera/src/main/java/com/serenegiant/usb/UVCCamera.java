@@ -142,16 +142,22 @@ public class UVCCamera {
      * USB permission is necessary before this method is called
      * @param ctrlBlock
      */
-    public void open(final UsbControlBlock ctrlBlock) {
+    public boolean open(final UsbControlBlock ctrlBlock) {
 		mCtrlBlock = ctrlBlock;
-		nativeConnect(mNativePtr,
+		if (nativeConnect(mNativePtr,
 			mCtrlBlock.getVenderId(), mCtrlBlock.getProductId(),
 			mCtrlBlock.getFileDescriptor(),
-			getUSBFSName(mCtrlBlock));
+			getUSBFSName(mCtrlBlock)) != 0) {
+
+            return false;
+        }
     	if (mNativePtr != 0 && TextUtils.isEmpty(mSupportedSize)) {
     		mSupportedSize = nativeGetSupportedSize(mNativePtr);
     	}
-		nativeSetPreviewSize(mNativePtr, DEFAULT_PREVIEW_WIDTH, DEFAULT_PREVIEW_HEIGHT, DEFAULT_PREVIEW_MODE);
+		if (nativeSetPreviewSize(mNativePtr, DEFAULT_PREVIEW_WIDTH, DEFAULT_PREVIEW_HEIGHT, DEFAULT_PREVIEW_MODE) != 0) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -247,9 +253,9 @@ public class UVCCamera {
      * this method require API >= 14
      * @param texture
      */
-    public void setPreviewTexture(final SurfaceTexture texture) {	// API >= 11
+    public boolean setPreviewTexture(final SurfaceTexture texture) {	// API >= 11
     	final Surface surface = new Surface(texture);	// XXX API >= 14
-    	nativeSetPreviewDisplay(mNativePtr, surface);
+    	return nativeSetPreviewDisplay(mNativePtr, surface) == 0;
     }
 
     /**
@@ -274,10 +280,11 @@ public class UVCCamera {
     /**
      * start preview
      */
-    public void startPreview() {
+    public boolean startPreview() {
     	if (mCtrlBlock != null) {
-    		nativeStartPreview(mNativePtr);
+    		return nativeStartPreview(mNativePtr) == 0;
     	}
+        return false;
     }
 
     /**
@@ -288,6 +295,16 @@ public class UVCCamera {
     	if (mCtrlBlock != null) {
     		nativeStopPreview(mNativePtr);
     	}
+    }
+
+    /**
+     * get supported frame formats of the camera.
+     */
+    public FrameFormatInfo[] getSupportedFormats() {
+        if (mCtrlBlock != null) {
+            return nativeGetSupportedFormats(mNativePtr);
+        }
+        return new FrameFormatInfo[0];
     }
 
     /**
@@ -923,6 +940,7 @@ public class UVCCamera {
     	}
     }
     private static final native int nativeSetCaptureDisplay(long id_camera, Surface surface);
+    private static final native FrameFormatInfo[] nativeGetSupportedFormats(long id_camera);
 
     private static final native long nativeGetCtrlSupports(long id_camera);
     private static final native long nativeGetProcSupports(long id_camera);

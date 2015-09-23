@@ -840,3 +840,42 @@ int UVCCamera::getZoom() {
 	}
 	RETURN(0, int);
 }
+
+void probeFunc(int w, int h, int maxFPS, int format, void *userdata) {
+	if (userdata == NULL) {
+		return;
+	}
+	UVCCamera *cam = reinterpret_cast<UVCCamera*>(userdata);
+	
+	FrameFormatInfo fmt;
+	
+	fmt.frameWidth = w;
+    fmt.frameHeight = h;
+    fmt.maxFPS = maxFPS;
+    fmt.frameTransferFormat = format;
+	
+	cam->addSupportedFormat(fmt);
+}
+
+void UVCCamera::addSupportedFormat(FrameFormatInfo &fmt) {
+	internalFormats.push_back(fmt);
+}
+
+int UVCCamera::getSupportedFormats(JNIEnv *env, std::vector<FrameFormatInfo> &formats) {
+	ENTER();
+	int result = -1;
+	
+	if (!mDeviceHandle) {
+		RETURN(result, int);
+	}
+
+	internalFormats.clear();
+	formats.clear();
+	uvc_get_stream_ctrl_formats(mDeviceHandle, probeFunc, this);
+	for (int i = 0; i < internalFormats.size(); i++) {
+		formats.push_back(internalFormats[i]);
+	}
+	
+	result = 0;
+	RETURN(result, int);
+}

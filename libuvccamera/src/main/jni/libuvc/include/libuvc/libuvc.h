@@ -563,6 +563,9 @@ uvc_error_t uvc_get_stream_ctrl_format_size_fps(uvc_device_handle_t *devh,
 		uvc_stream_ctrl_t *ctrl, enum uvc_frame_format cf, int width,
 		int height, int min_fps, int max_fps);	// XXX added
 
+typedef void (*if_format_cb_t)(int w, int h, int maxFPS, int format, void *userdata);
+void uvc_get_stream_ctrl_formats(uvc_device_handle_t *devh, if_format_cb_t cb, void *userdata);
+	
 uvc_error_t uvc_probe_stream_ctrl(uvc_device_handle_t *devh,
 		uvc_stream_ctrl_t *ctrl);
 

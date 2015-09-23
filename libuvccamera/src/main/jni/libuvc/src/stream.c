@@ -489,6 +489,53 @@ found:
 	RETURN(UVC_SUCCESS, uvc_error_t);
 }
 
+uvc_error_t _uvc_get_stream_ctrl_format_nofilter(uvc_device_handle_t *devh,
+	uvc_streaming_interface_t *stream_if, uvc_format_desc_t *format, if_format_cb_t cb, void *userdata) {
+
+	ENTER();
+
+	int i;
+	uvc_frame_desc_t *frame;
+	uvc_stream_ctrl_t ctrl;
+	memset(&ctrl, 0, sizeof(ctrl));	// XXX add
+
+	ctrl.bInterfaceNumber = stream_if->bInterfaceNumber;
+	uvc_error_t result = uvc_claim_if(devh, ctrl.bInterfaceNumber);
+	if (UNLIKELY(result)) {
+		LOGE("uvc_claim_if:err=%d", result);
+		goto fail;
+	}
+	for (i = 0; i < 2; i++) {
+		result = _prepare_stream_ctrl(devh, &ctrl);
+	}
+	if (UNLIKELY(result)) {
+		LOGE("_prepare_stream_ctrl:err=%d", result);
+		goto fail;
+	}
+
+	DL_FOREACH(format->frame_descs, frame)
+	{
+		uint32_t *interval;
+
+		if (frame->intervals) {
+			uint32_t it = 0;
+			for (interval = frame->intervals; *interval; ++interval) {
+				if (10000000 / *interval > it) {
+					it = 10000000 / *interval;
+				}
+			}
+			cb(frame->wWidth, frame->wHeight, it, format->bFormatIndex, userdata);
+		} else {
+			cb(frame->wWidth, frame->wHeight, frame->dwMaxFrameInterval, format->bFormatIndex, userdata);
+		}
+	}
+	result = UVC_ERROR_INVALID_MODE;
+
+fail:
+	uvc_release_if(devh, ctrl.bInterfaceNumber);
+	RETURN(UVC_SUCCESS, uvc_error_t);
+}
+
 /** Get a negotiated streaming control block for some common parameters.
  * @ingroup streaming
  *
@@ -546,6 +593,27 @@ uvc_error_t uvc_get_stream_ctrl_format_size_fps(uvc_device_handle_t *devh,
 
 found:
 	RETURN(uvc_probe_stream_ctrl(devh, ctrl), uvc_error_t);
+}
+
+/** Get a list of supported formats.
+ * @ingroup streaming
+ *
+ * @param[in] devh Device handle
+ * @param[in] cb callback function called uvc_stream_ctrl_t for each format found
+ * @param[in] userdata passed to the callback function
+ */
+void uvc_get_stream_ctrl_formats(uvc_device_handle_t *devh, if_format_cb_t cb, void *userdata) {
+
+	uvc_streaming_interface_t *stream_if;
+	uvc_format_desc_t *format;
+	uvc_error_t result;
+	DL_FOREACH(devh->info->stream_ifs, stream_if)
+	{
+		DL_FOREACH(stream_if->format_descs, format)
+		{
+			_uvc_get_stream_ctrl_format_nofilter(devh, stream_if, format, cb, userdata);
+		}
+	}
 }
 
 /** @internal

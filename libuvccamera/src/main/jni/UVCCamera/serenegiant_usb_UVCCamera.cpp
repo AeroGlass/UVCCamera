@@ -242,6 +242,55 @@ static jint nativeSetCaptureDisplay(JNIEnv *env, jobject thiz,
 	RETURN(result, jint);
 }
 
+
+static jobjectArray nativeGetSupportedFormats(JNIEnv *env, jobject thiz,
+	ID_TYPE id_camera) {
+
+	ENTER();
+	
+	jclass frameInfoClass = env->FindClass("com/serenegiant/usb/FrameFormatInfo");
+	jmethodID con = env->GetMethodID(frameInfoClass, "<init>", "()V");
+	jfieldID ffi_frameWidth = env->GetFieldID(frameInfoClass, "frameWidth", "I");
+	jfieldID ffi_frameHeight = env->GetFieldID(frameInfoClass, "frameHeight", "I");
+	jfieldID ffi_maxFPS = env->GetFieldID(frameInfoClass, "maxFPS", "I");
+	jfieldID ffi_frameTransferFormat = env->GetFieldID(frameInfoClass, "frameTransferFormat", "I");
+	jobjectArray result = NULL;
+
+	if (env->ExceptionCheck()) {
+		env->ExceptionDescribe();
+		RETURN(result, jobjectArray);
+	}
+	
+	UVCCamera *camera = reinterpret_cast<UVCCamera *>(id_camera);
+	if (LIKELY(camera)) {
+		std::vector<FrameFormatInfo> formats;
+
+		int fmtResult = camera->getSupportedFormats(env, formats);
+		if (fmtResult == 0) {
+			result = env->NewObjectArray(formats.size(), frameInfoClass, NULL);
+			
+			for (int i = 0; i < formats.size(); i++) {
+				FrameFormatInfo fmt = formats[i];
+				jobject newObj = env->NewObject(frameInfoClass, con);
+
+				// copy the values
+				env->SetIntField(newObj, ffi_frameWidth, fmt.frameWidth);
+				env->SetIntField(newObj, ffi_frameHeight, fmt.frameHeight);
+				env->SetIntField(newObj, ffi_maxFPS, fmt.maxFPS);
+				env->SetIntField(newObj, ffi_frameTransferFormat, fmt.frameTransferFormat);
+				
+				env->SetObjectArrayElement(result, i, newObj);  
+			}
+		}
+	} 
+	
+	if (result == NULL) {
+		result = env->NewObjectArray(0, frameInfoClass, NULL);  
+	}
+
+	RETURN(result, jobjectArray);
+}
+
 //======================================================================
 static jlong nativeGetCtrlSupports(JNIEnv *env, jobject thiz,
 	ID_TYPE id_camera) {
@@ -846,6 +895,7 @@ static JNINativeMethod methods[] = {
 	{ "nativeSetFrameCallback",			"(JLcom/serenegiant/usb/IFrameCallback;I)I", (void *) nativeSetFrameCallback },
 
 	{ "nativeSetCaptureDisplay",		"(JLandroid/view/Surface;)I", (void *) nativeSetCaptureDisplay },
+	{ "nativeGetSupportedFormats","(J)[Lcom/serenegiant/usb/FrameFormatInfo;", (void *) nativeGetSupportedFormats },
 
 	{ "nativeGetCtrlSupports",			"(J)J", (void *) nativeGetCtrlSupports },
 	{ "nativeGetProcSupports",			"(J)J", (void *) nativeGetProcSupports },

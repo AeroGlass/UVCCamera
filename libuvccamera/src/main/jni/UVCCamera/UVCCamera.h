@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <android/native_window.h>
+#include <vector>
 #include "UVCPreview.h"
 
 #define	CTRL_SCANNING		0x000001	// D0:  Scanning Mode
@@ -90,6 +91,14 @@ typedef uvc_error_t (*paramget_func_ushort)(uvc_device_handle_t *devh, uint16_t 
 typedef uvc_error_t (*paramset_func_short)(uvc_device_handle_t *devh, short value);
 typedef uvc_error_t (*paramset_func_ushort)(uvc_device_handle_t *devh, uint16_t value);
 
+struct FrameFormatInfo {
+public:
+	int frameWidth;
+    int frameHeight;
+    int maxFPS;
+    int frameTransferFormat;
+};
+
 class UVCCamera {
 	char *mUsbFs;
 	uvc_context_t *mContext;
@@ -99,6 +108,7 @@ class UVCCamera {
 	UVCPreview *mPreview;
 	uint64_t mCtrlSupports;
 	uint64_t mPUSupports;
+	std::vector<FrameFormatInfo> internalFormats;
 	control_value_t mBrightness;
 	control_value_t mContrast;
 	control_value_t mSharpness;
@@ -127,7 +137,9 @@ public:
 	int startPreview();
 	int stopPreview();
 	int setCaptureDisplay(ANativeWindow *capture_window);
-
+	int getSupportedFormats(JNIEnv *env, std::vector<FrameFormatInfo> &formats);
+	void addSupportedFormat(FrameFormatInfo &fmt);
+	
 	int getCtrlSupports(uint64_t *supports);
 	int getProcSupports(uint64_t *supports);
 
