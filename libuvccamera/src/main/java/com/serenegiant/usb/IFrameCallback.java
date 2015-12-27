@@ -37,5 +37,5 @@ public interface IFrameCallback {
 	 * Some frames may drops if this method takes a time.
 	 * @param frame
 	 */
-	public void onFrame(ByteBuffer frame);
+	public void onFrame(ByteBuffer frame,long t_sec, long t_usec); //CB: added t_sec and t_usec for timestamp
 }

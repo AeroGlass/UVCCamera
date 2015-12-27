@@ -282,7 +282,7 @@ public class UVCCamera {
 	public void setPreviewSize(final int width, final int height, final int mode) {
 		setPreviewSize(width, height, DEFAULT_PREVIEW_MIN_FPS, DEFAULT_PREVIEW_MAX_FPS, mode, 0);
 	}
-	
+
 	/**
 	 * Set preview size and preview mode
 	 * @param width
@@ -292,6 +292,18 @@ public class UVCCamera {
 	 */
 	public void setPreviewSize(final int width, final int height, final int mode, final float bandwidth) {
 		setPreviewSize(width, height, DEFAULT_PREVIEW_MIN_FPS, DEFAULT_PREVIEW_MAX_FPS, mode, bandwidth);
+	}
+
+	/**
+	 * Set preview size and preview mode
+	 * @param width
+	 @param height
+	 @param mode 0:yuyv, other:MJPEG
+	 @param minfps
+	 @param maxfps
+	 */
+	public void setPreviewSize(final int width, final int height, final int mode, final int minfps, final int maxfps) {
+		setPreviewSize(width, height, minfps, maxfps, mode, 0);
 	}
 
 	/**
@@ -436,6 +448,7 @@ public class UVCCamera {
     // it is better to wait several hundreads millseconds.
 	public boolean checkSupportFlag(final long flag) {
     	updateCameraParams();
+		Log.d("Control supports",""+mControlSupports+" - "+mProcSupports);
     	if ((flag & 0x80000000) == 0x80000000)
     		return ((mProcSupports & flag) == (flag & 0x7ffffffF));
     	else
@@ -496,6 +509,57 @@ public class UVCCamera {
     		nativeSetFocus(mNativePtr, mFocusDef);
     	}
     }
+
+	//================================================================================
+	/**
+	 * @param mode
+	 */
+	public synchronized void setExposureMode(final int mode) {
+		if (mNativePtr != 0) {
+			nativeSetExposureMode(mNativePtr, mode);
+		}
+	}
+
+	/**
+	 * @return mode
+	 */
+	public synchronized int getExposureMode() {
+		return nativeGetExposureMode(mNativePtr);
+	}
+
+	/**
+	 * @param time
+	 */
+	public synchronized void setAbsExposureTime(final int time) { //1 ms = 10
+		if (mNativePtr != 0) {
+			nativeSetAbsExposureTime(mNativePtr, time);
+		}
+	}
+
+	/**
+	 * @return time
+	 */
+	public synchronized int getAbsExposureTime() {
+		return nativeGetAbsExposureTime(mNativePtr);
+	}
+
+	/**
+	 * @param mode
+	 */
+	public synchronized void setExposurePriority(final int mode) {
+		if (mNativePtr != 0) {
+			nativeSetExposurePriority(mNativePtr, mode);
+		}
+	}
+
+	/**
+	 * @return mode
+	 */
+	public synchronized int getExposurePriority() {
+		return nativeGetExposurePriority(mNativePtr);
+	}
+
+
 
 //================================================================================
 	public synchronized void setAutoWhiteBlance(final boolean autoWhiteBlance) {
@@ -1076,6 +1140,9 @@ public class UVCCamera {
 	private final native int nativeUpdateExposureLimit(final long id_camera);
     private static final native int nativeSetExposure(final long id_camera, final int exposure);
     private static final native int nativeGetExposure(final long id_camera);
+
+	private static final native int nativeSetAbsExposureTime(long id_camera, int exposureTime);
+	private static final native int nativeGetAbsExposureTime(long id_camera);
 
 	private final native int nativeUpdateExposureRelLimit(final long id_camera);
     private static final native int nativeSetExposureRel(final long id_camera, final int exposure_rel);

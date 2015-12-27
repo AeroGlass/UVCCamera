@@ -450,7 +450,7 @@ static uvc_error_t _uvc_get_stream_ctrl_format(uvc_device_handle_t *devh,
 		if (frame->intervals) {
 			for (interval = frame->intervals; *interval; ++interval) {
 				uint32_t it = 10000000 / *interval;
-				LOGV("it:%d", it);
+				LOGD("it:%d", it);
 				if ((it >= (uint32_t) min_fps) && (it <= (uint32_t) max_fps)) {
 					ctrl->bmHint = (1 << 0); /* don't negotiate interval */
 					ctrl->bFormatIndex = format->bFormatIndex;
@@ -465,7 +465,7 @@ static uvc_error_t _uvc_get_stream_ctrl_format(uvc_device_handle_t *devh,
 			for (fps = max_fps; fps >= min_fps; fps--) {
 				uint32_t interval_100ns = 10000000 / fps;
 				uint32_t interval_offset = interval_100ns - frame->dwMinFrameInterval;
-				LOGV("fps:%d", fps);
+				LOGD("fps:%d", fps);
 				if (interval_100ns >= frame->dwMinFrameInterval
 					&& interval_100ns <= frame->dwMaxFrameInterval
 					&& !(interval_offset
@@ -486,6 +486,7 @@ fail:
 	RETURN(result, uvc_error_t);
 
 found:
+	//LOGW("found format it:%d", ctrl->dwFrameInterval);
 	RETURN(UVC_SUCCESS, uvc_error_t);
 }
 
@@ -1733,6 +1734,12 @@ void _uvc_populate_frame(uvc_stream_handle_t *strmh) {
 	frame->height = frame_desc->wHeight;
 	// XXX set actual_bytes to zero when erro bits is on
 	frame->actual_bytes = LIKELY(!strmh->hold_bfh_err) ? strmh->hold_bytes : 0;
+
+	//CB: added some hacky code to get capture time, at least this should be better than doing this in client code!
+	struct timespec now;
+	clock_gettime(CLOCK_MONOTONIC, &now);
+	frame->capture_time.tv_sec = now.tv_sec;
+	frame->capture_time.tv_usec = now.tv_nsec/1000;
 
 	switch (frame->frame_format) {
 	case UVC_FRAME_FORMAT_YUYV:

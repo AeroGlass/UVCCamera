@@ -62,6 +62,7 @@ private:
 	int requestMinFps, requestMaxFps;
 	float requestBandwidth;
 	int frameWidth, frameHeight;
+	int minFPS, maxFPS;
 	int frameMode;
 	size_t frameBytes;
 	pthread_t preview_thread;
