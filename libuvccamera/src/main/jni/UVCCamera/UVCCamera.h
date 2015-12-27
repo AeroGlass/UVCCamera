@@ -132,6 +132,7 @@ public:
 	int release();
 	char *getSupportedSize();
 	int setPreviewSize(int width, int height, int mode);
+	int setPreviewSize(int width, int height, int mode, int minfps, int maxfps);
 	int setPreviewDisplay(ANativeWindow *preview_window);
 	int setFrameCallback(JNIEnv *env, jobject frame_callback_obj, int pixel_format);
 	int startPreview();
@@ -145,6 +146,13 @@ public:
 
 	int setExposureMode(int mode);
 	int getExposureMode();
+	
+	//CB add exposure control
+	int setAbsExposureTime(int mode);
+	int getAbsExposureTime();
+	
+	int setExposurePriority(int mode);
+	int getExposurePriority();
 
 	int setAutoFocus(bool autoFocus);
 	bool getAutoFocus();

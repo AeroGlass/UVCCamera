@@ -45,6 +45,8 @@ UVCPreview::UVCPreview(uvc_device_handle_t *devh)
 	frameHeight(DEFAULT_PREVIEW_HEIGHT),
 	frameBytes(DEFAULT_PREVIEW_WIDTH * DEFAULT_PREVIEW_HEIGHT * 2),	// YUYV
 	frameMode(0),
+	minFPS(1),
+	maxFPS(30),
 	previewBytes(DEFAULT_PREVIEW_WIDTH * DEFAULT_PREVIEW_HEIGHT * PREVIEW_PIXEL_BYTES),
 	previewFormat(WINDOW_FORMAT_RGBA_8888),
 	mIsRunning(false),
@@ -95,7 +97,27 @@ int UVCPreview::setPreviewSize(int width, int height, int mode) {
 		uvc_stream_ctrl_t ctrl;
 		result = uvc_get_stream_ctrl_format_size_fps(mDeviceHandle, &ctrl,
 			!requestMode ? UVC_FRAME_FORMAT_YUYV : UVC_FRAME_FORMAT_MJPEG,
-			requestWidth, requestHeight, 1, 30);
+			requestWidth, requestHeight, minFPS, maxFPS);
+	}
+	
+	RETURN(result, int);
+}
+
+int UVCPreview::setPreviewSize(int width, int height, int mode, int minfps, int maxfps) {
+	ENTER();
+	
+	int result = 0;
+	if ((requestWidth != width) || (requestHeight != height) || (requestMode != mode) || (minFPS != minfps) || (maxFPS != maxfps)) {
+		requestWidth = width;
+		requestHeight = height;
+		requestMode = mode;
+		minFPS = minfps;
+		maxFPS = maxfps;
+
+		uvc_stream_ctrl_t ctrl;
+		result = uvc_get_stream_ctrl_format_size_fps(mDeviceHandle, &ctrl,
+			!requestMode ? UVC_FRAME_FORMAT_YUYV : UVC_FRAME_FORMAT_MJPEG,
+			requestWidth, requestHeight, minfps, maxfps);
 	}
 	
 	RETURN(result, int);
@@ -142,7 +164,7 @@ int UVCPreview::setFrameCallback(JNIEnv *env, jobject frame_callback_obj, int pi
 				jclass clazz = env->GetObjectClass(frame_callback_obj);
 				if (LIKELY(clazz)) {
 					iframecallback_fields.onFrame = env->GetMethodID(clazz,
-						"onFrame",	"(Ljava/nio/ByteBuffer;)V");
+						"onFrame",	"(Ljava/nio/ByteBuffer;JJ)V"); //CB: added timestamp to signature, original: "(Ljava/nio/ByteBuffer;)V"
 				} else {
 					LOGW("failed to get object class");
 				}
@@ -246,9 +268,14 @@ int UVCPreview::startPreview() {
 		mIsRunning = true;
 		pthread_mutex_lock(&preview_mutex);
 		{
-			if (LIKELY(mPreviewWindow)) {
+			//CB Hack, start preview also without window!!!
+			/*if (LIKELY(mPreviewWindow)) {
 				result = pthread_create(&preview_thread, NULL, preview_thread_func, (void *)this);
+			}*/
+			if (LIKELY(mPreviewWindow==NULL)) {
+				LOGW("UVCCamera::window does not exist, trying to start anyway...");
 			}
+			result = pthread_create(&preview_thread, NULL, preview_thread_func, (void *)this);
 		}
 		pthread_mutex_unlock(&preview_mutex);
 		if (UNLIKELY(result != EXIT_SUCCESS)) {
@@ -391,7 +418,7 @@ int UVCPreview::prepare_preview(uvc_stream_ctrl_t *ctrl) {
 	ENTER();
 	result = uvc_get_stream_ctrl_format_size_fps(mDeviceHandle, ctrl,
 		!requestMode ? UVC_FRAME_FORMAT_YUYV : UVC_FRAME_FORMAT_MJPEG,
-		requestWidth, requestHeight, 1, 30
+		requestWidth, requestHeight, minFPS, maxFPS
 	);
 	if (LIKELY(!result)) {
 #if LOCAL_DEBUG
@@ -753,6 +780,37 @@ void UVCPreview::do_capture_surface(JNIEnv *env) {
 	EXIT();
 }
 
+/*class Timer {
+private:
+
+    timeval startTime;
+
+public:
+
+    void start(){
+        gettimeofday(&startTime, NULL);
+    }
+
+    double stop(){
+        timeval endTime;
+        long seconds, useconds;
+        double duration;
+
+        gettimeofday(&endTime, NULL);
+
+        seconds  = endTime.tv_sec  - startTime.tv_sec;
+        useconds = endTime.tv_usec - startTime.tv_usec;
+
+        duration = seconds + useconds/1000000.0;
+
+        return duration;
+    }
+
+    static void printTime(double duration){
+        printf("%5.6f seconds\n", duration);
+    }
+};*/
+
 /**
 * call IFrameCallback#onFrame if needs
  */
@@ -762,6 +820,10 @@ void UVCPreview::do_capture_callback(JNIEnv *env, uvc_frame_t *frame) {
 	if (LIKELY(frame)) {
 		uvc_frame_t *callback_frame = frame;
 		if (mFrameCallbackObj) {
+			//CB: pass also timestamp to java
+			jlong t1 = frame->capture_time.tv_sec;
+			jlong t2 = frame->capture_time.tv_usec;
+			
 			if (mFrameCallbackFunc) {
 				callback_frame = uvc_allocate_frame(callbackPixelBytes);
 				if (LIKELY(callback_frame)) {
@@ -778,7 +840,9 @@ void UVCPreview::do_capture_callback(JNIEnv *env, uvc_frame_t *frame) {
 				}
 			}
 			jobject buf = env->NewDirectByteBuffer(callback_frame->data, callbackPixelBytes);
-			env->CallVoidMethod(mFrameCallbackObj, iframecallback_fields.onFrame, buf);
+			
+			env->CallVoidMethod(mFrameCallbackObj, iframecallback_fields.onFrame, buf,t1,t2);
+			//old: env->CallVoidMethod(mFrameCallbackObj, iframecallback_fields.onFrame, buf);
 			env->ExceptionClear();
 			env->DeleteLocalRef(buf);
 		}
