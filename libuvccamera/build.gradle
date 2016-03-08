@@ -46,10 +46,5 @@ task ndkBuild(type: Exec, description: 'Compile JNI source via NDK') {
 								+ 'intermediates' + File.separator
 								+ 'ndk' + File.separator
 								+ 'obj' + File.separator)
-    if (!ndkObjDir.exists()) {
-        if (!ndkObjDir.mkdirs()) {
-            throw new GradleException("failed to create NDK object output directory")
-        }
-	}
 	commandLine ndkBuildPath, parallelCommand, 'NDK_OUT='+ndkObjDir , '-C', file('src/main').absolutePath
 }
