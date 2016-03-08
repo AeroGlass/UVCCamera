@@ -24,16 +24,11 @@ android {
 	}
 }
 
-dependencies {
-    compile fileTree(dir: new File(buildDir, 'libs'), include: '*.jar')
-}
-
 tasks.withType(JavaCompile) {
 	compileTask -> compileTask.dependsOn ndkBuild
 }
 
 task ndkBuild(type: Exec, description: 'Compile JNI source via NDK') {
-	println('executing ndkBuild')
 	def ndkBuildingDir = project.plugins.findPlugin('com.android.library').sdkHandler.getNdkFolder().absolutePath
 	def ndkBuildPath = ndkBuildingDir
 	if (Os.isFamily(Os.FAMILY_WINDOWS)) {
@@ -41,5 +36,20 @@ task ndkBuild(type: Exec, description: 'Compile JNI source via NDK') {
 	} else {
 		ndkBuildPath = ndkBuildingDir + '/ndk-build'
 	}
-	commandLine ndkBuildPath, '-j8', '-C', file('src/main').absolutePath
+
+    def parallelCommand = '';
+    if (project.ext.has('ndkBuildParallelSlots')) {
+        parallelCommand = '-j' + project.ext.ndkBuildParallelSlots
+    }
+
+    def ndkObjDir = new File(project.getBuildDir().getAbsolutePath() + File.separator
+								+ 'intermediates' + File.separator
+								+ 'ndk' + File.separator
+								+ 'obj' + File.separator)
+    if (!ndkObjDir.exists()) {
+        if (!ndkObjDir.mkdirs()) {
+            throw new GradleException("failed to create NDK object output directory")
+        }
+	}
+	commandLine ndkBuildPath, parallelCommand, 'NDK_OUT='+ndkObjDir , '-C', file('src/main').absolutePath
 }
