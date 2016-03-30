@@ -2044,6 +2044,17 @@ static jint nativeGetPrivacy(JNIEnv *env, jobject thiz,
 	RETURN(result, jint);
 }
 
+static jlong nativeGetMonotonicTime(JNIEnv *env, jobject thiz) {
+	jlong result;
+	ENTER();
+	struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+
+    result = ((jlong)now.tv_sec) * 1000000 + ((jlong)now.tv_nsec)/1000;
+
+	RETURN(result, jlong);
+}
+
 //**********************************************************************
 //
 //**********************************************************************
@@ -2219,7 +2230,7 @@ static JNINativeMethod methods[] = {
 	{ "nativeUpdateZoomLimit",			"(J)I", (void *) nativeUpdateZoomLimit },
 	{ "nativeSetZoom",					"(JI)I", (void *) nativeSetZoom },
 	{ "nativeGetZoom",					"(J)I", (void *) nativeGetZoom },
-	
+
 	{ "nativeUpdateZoomRelLimit",		"(J)I", (void *) nativeUpdateZoomRelLimit },
 	{ "nativeSetZoomRel",				"(JI)I", (void *) nativeSetZoomRel },
 	{ "nativeGetZoomRel",				"(J)I", (void *) nativeGetZoomRel },
@@ -2243,6 +2254,8 @@ static JNINativeMethod methods[] = {
 	{ "nativeUpdatePrivacyLimit",		"(J)I", (void *) nativeUpdatePrivacyLimit },
 	{ "nativeSetPrivacy",				"(JZ)I", (void *) nativeSetPrivacy },
 	{ "nativeGetPrivacy",				"(J)I", (void *) nativeGetPrivacy },
+
+	{ "nativeGetMonotonicTime",			"()J", (void *) nativeGetMonotonicTime },
 };
 
 int register_uvccamera(JNIEnv *env) {
