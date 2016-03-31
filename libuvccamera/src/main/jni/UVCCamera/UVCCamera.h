@@ -88,6 +88,7 @@ typedef struct control_value {
 
 typedef uvc_error_t (*paramget_func_short)(uvc_device_handle_t *devh, short *value, enum uvc_req_code req_code);
 typedef uvc_error_t (*paramget_func_ushort)(uvc_device_handle_t *devh, uint16_t *value, enum uvc_req_code req_code);
+typedef uvc_error_t (*paramget_func_i32)(uvc_device_handle_t *devh, int32_t *value, enum uvc_req_code req_code);
 typedef uvc_error_t (*paramset_func_short)(uvc_device_handle_t *devh, short value);
 typedef uvc_error_t (*paramset_func_ushort)(uvc_device_handle_t *devh, uint16_t value);
 
@@ -119,6 +120,7 @@ class UVCCamera {
 	control_value_t mZoom;
 	control_value_t mWhiteBlance;
 	control_value_t mFocus;
+	control_value_t mExposureAbs;
 	void clearCameraParams();
 	int internalSetCtrlValue(control_value_t &values, short value,
 			paramget_func_short get_func, paramset_func_short set_func);
@@ -146,7 +148,8 @@ public:
 
 	int setExposureMode(int mode);
 	int getExposureMode();
-	
+
+	int updateExposureLimit(int &min, int &max, int &def);
 	//CB add exposure control
 	int setAbsExposureTime(int mode);
 	int getAbsExposureTime();

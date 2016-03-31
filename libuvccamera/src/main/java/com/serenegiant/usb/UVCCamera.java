@@ -57,6 +57,7 @@ public class UVCCamera {
 	public static final int PIXEL_FORMAT_RGBX = 3;
 	public static final int PIXEL_FORMAT_YUV420SP = 4;
 	public static final int PIXEL_FORMAT_NV21 = 5;		// = YVU420SemiPlanar
+	public static final int PIXEL_FORMAT_GREY = 6;
 
 	//--------------------------------------------------------------------------------
     public static final int	CTRL_SCANNING		= 0x00000001;	// D0:  Scanning Mode
@@ -126,6 +127,7 @@ public class UVCCamera {
     protected int mSaturationMin, mSaturationMax, mSaturationDef;
     protected int mHueMin, mHueMax, mHueDef;
     protected int mZoomMin, mZoomMax, mZoomDef;
+    protected int mExposureMin, mExposureMax, mExposureDef;
     // until here
 
     /**
@@ -870,6 +872,7 @@ public class UVCCamera {
 	    	    	nativeUpdateZoomLimit(mNativePtr);
 	    	    	nativeUpdateWhiteBlanceLimit(mNativePtr);
 	    	    	nativeUpdateFocusLimit(mNativePtr);
+	    	    	nativeUpdateExposureLimit(mNativePtr);
     	    	}
     	    	if (DEBUG) {
 					dumpControls(mControlSupports);
@@ -884,11 +887,25 @@ public class UVCCamera {
 					Log.v(TAG, String.format("Zoom:min=%d,max=%d,def=%d", mZoomMin, mZoomMax, mZoomDef));
 					Log.v(TAG, String.format("WhiteBlance:min=%d,max=%d,def=%d", mWhiteBlanceMin, mWhiteBlanceMax, mWhiteBlanceDef));
 					Log.v(TAG, String.format("Focus:min=%d,max=%d,def=%d", mFocusMin, mFocusMax, mFocusDef));
+					Log.v(TAG, String.format("Exposure:min=%d,max=%d,def=%d", mExposureMin,
+                                             mExposureMax, mExposureDef));
 				}
 			}
     	} else {
     		mControlSupports = mProcSupports = 0;
     	}
+    }
+
+    public int getExposureTimeMax() {
+        return mExposureMax;
+    }
+
+    public int getExposureTimeMin() {
+        return mExposureMin;
+    }
+
+    public int getExposureTimeDefault() {
+        return mExposureDef;
     }
 
     private static final String[] SUPPORTS_CTRL = {
@@ -1023,6 +1040,7 @@ public class UVCCamera {
 	private static final native int nativeSetExposurePriority(long id_camera, int exposureMode);
 	private static final native int nativeGetExposurePriority(long id_camera);
 
+    private final native int nativeUpdateExposureLimit(long id_camera);
 	private static final native int nativeSetAbsExposureTime(long id_camera, int exposureTime);
 	private static final native int nativeGetAbsExposureTime(long id_camera);
 

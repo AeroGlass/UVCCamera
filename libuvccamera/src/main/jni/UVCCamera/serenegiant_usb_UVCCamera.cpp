@@ -358,6 +358,26 @@ static jint nativeGetExposureMode(JNIEnv *env, jobject thiz,
 	RETURN(result, jint);
 }
 
+//======================================================================
+// Java method correspond to this function should not be a static mathod
+static jint nativeUpdateExposureLimit(JNIEnv *env, jobject thiz,
+	ID_TYPE id_camera) {
+
+	jint result = JNI_ERR;
+	ENTER();
+	UVCCamera *camera = reinterpret_cast<UVCCamera *>(id_camera);
+	if (LIKELY(camera)) {
+		int min, max, def;
+		result = camera->updateExposureLimit(min, max, def);
+		if (!result) {
+			setField_int(env, thiz, "mExposureMin", min);
+			setField_int(env, thiz, "mExposureMax", max);
+			setField_int(env, thiz, "mExposureDef", def);
+		}
+	}
+	RETURN(result, jint);
+}
+
 //CB add exposure control
 //======================================================================
 static jint nativeSetAbsExposureTime(JNIEnv *env, jobject thiz,
@@ -970,6 +990,7 @@ static JNINativeMethod methods[] = {
 	{ "nativeSetExposurePriority",			"(JI)I", (void *) nativeSetExposurePriority },
 	{ "nativeGetExposurePriority",			"(J)I", (void *) nativeGetExposurePriority },
 	
+	{ "nativeUpdateExposureLimit",			"(J)I", (void *) nativeUpdateExposureLimit },
 	{ "nativeSetAbsExposureTime",			"(JI)I", (void *) nativeSetAbsExposureTime },
 	{ "nativeGetAbsExposureTime",			"(J)I", (void *) nativeGetAbsExposureTime },
 

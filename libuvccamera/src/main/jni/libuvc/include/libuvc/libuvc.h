@@ -785,6 +785,7 @@ uvc_error_t uvc_any2bgr(uvc_frame_t *in, uvc_frame_t *out);
 uvc_error_t uvc_mjpeg2rgb(uvc_frame_t *in, uvc_frame_t *out);
 uvc_error_t uvc_mjpeg2rgbx(uvc_frame_t *in, uvc_frame_t *out);
 uvc_error_t uvc_mjpeg2yuyv(uvc_frame_t *in, uvc_frame_t *out);
+uvc_error_t uvc_mjpeg2grey8(uvc_frame_t *in, uvc_frame_t *out);
 #endif
 
 uvc_error_t uvc_yuyv2rgb565(uvc_frame_t *in, uvc_frame_t *out);
@@ -801,6 +802,9 @@ uvc_error_t uvc_yuyv2yuv420P(uvc_frame_t *in, uvc_frame_t *out);
 uvc_error_t uvc_yuyv2iyuv420P(uvc_frame_t *in, uvc_frame_t *out);
 uvc_error_t uvc_yuyv2yuv420SP(uvc_frame_t *in, uvc_frame_t *out);
 uvc_error_t uvc_yuyv2iyuv420SP(uvc_frame_t *in, uvc_frame_t *out);
+
+uvc_error_t uvc_yuyv2gray8(uvc_frame_t *in, uvc_frame_t *out);
+
 //**********************************************************************
 // added for diagonostic
 // t_saki@serenegiant.com
