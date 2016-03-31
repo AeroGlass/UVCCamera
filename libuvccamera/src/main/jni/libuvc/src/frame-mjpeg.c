@@ -550,3 +550,80 @@ fail:
 	return lines_read == out->height ? UVC_SUCCESS : UVC_ERROR_OTHER+1;
 }
 
+uvc_error_t uvc_mjpeg2grey8(uvc_frame_t *in, uvc_frame_t *out) {
+
+	out->actual_bytes = 0;	// XXX
+	if (UNLIKELY(in->frame_format != UVC_FRAME_FORMAT_MJPEG))
+		return UVC_ERROR_INVALID_PARAM;
+
+	if (uvc_ensure_frame_size(out, in->width * in->height * 2) < 0)
+		return UVC_ERROR_NO_MEM;
+
+	size_t lines_read = 0;
+	int i, j;
+	int num_scanlines;
+
+	out->width = in->width;
+	out->height = in->height;
+	out->frame_format = UVC_FRAME_FORMAT_GRAY8;
+	out->step = in->width;
+	out->sequence = in->sequence;
+	out->capture_time = in->capture_time;
+	out->source = in->source;
+
+	struct jpeg_decompress_struct dinfo;
+	struct error_mgr jerr;
+	dinfo.err = jpeg_std_error(&jerr.super);
+	jerr.super.error_exit = _error_exit;
+
+	if (setjmp(jerr.jmp)) {
+		goto fail;
+	}
+
+	jpeg_create_decompress(&dinfo);
+	jpeg_mem_src(&dinfo, in->data, in->actual_bytes/*in->data_bytes*/);	// XXX
+	jpeg_read_header(&dinfo, TRUE);
+
+	if (dinfo.dc_huff_tbl_ptrs[0] == NULL) {
+		/* This frame is missing the Huffman tables: fill in the standard ones */
+		insert_huff_tables(&dinfo);
+	}
+
+	dinfo.out_color_space = JCS_GRAYSCALE;
+	dinfo.dct_method = JDCT_IFAST;
+
+	// start decompressor
+	jpeg_start_decompress(&dinfo);
+
+	// these dinfo.xxx valiables are only valid after jpeg_start_decompress
+	const int row_stride = dinfo.output_width * dinfo.output_components;
+
+	// allocate buffer
+	register JSAMPARRAY buffer = (*dinfo.mem->alloc_sarray)
+		((j_common_ptr) &dinfo, JPOOL_IMAGE, row_stride, MAX_READLINE);
+
+	// local copy
+	uint8_t *data = out->data;
+	const int out_step = out->step;
+
+	if (LIKELY(dinfo.output_height == out->height)) {
+		for (; dinfo.output_scanline < dinfo.output_height ;) {
+			// convert lines of mjpeg data to gray8
+			num_scanlines = jpeg_read_scanlines(&dinfo, buffer, MAX_READLINE);
+			for (j = 0; j < num_scanlines; j++) {
+				memcpy(data + (lines_read + j) * out_step, buffer[j], row_stride);
+			}
+			lines_read += num_scanlines;
+
+		}
+		out->actual_bytes = in->width * in->height;	// XXX
+	}
+
+	jpeg_finish_decompress(&dinfo);
+	jpeg_destroy_decompress(&dinfo);
+	return lines_read == out->height ? UVC_SUCCESS : UVC_ERROR_OTHER;
+
+fail:
+	jpeg_destroy_decompress(&dinfo);
+	return lines_read == out->height ? UVC_SUCCESS : UVC_ERROR_OTHER+1;
+}

@@ -218,8 +218,7 @@ public:
 	int updateExposureModeLimit(int &min, int &max, int &def);
 	int setExposureMode(int mode);
 	int getExposureMode();
-	
-	//CB add exposure control
+
 	int setAbsExposureTime(int mode);
 	int getAbsExposureTime();
 	

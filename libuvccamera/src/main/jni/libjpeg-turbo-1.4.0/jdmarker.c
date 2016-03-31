@@ -466,8 +466,12 @@ get_dht (j_decompress_ptr cinfo)
     /* Here we just do minimal validation of the counts to avoid walking
      * off the end of our table space.  jdhuff.c will check more carefully.
      */
-    if (count > 256 || ((INT32) count) > length)
-      ERREXIT(cinfo, JERR_BAD_HUFF_TABLE);
+    if (count > 256 || ((INT32) count) > length) {
+    //  ERREXIT(cinfo, JERR_BAD_HUFF_TABLE);
+	// Some cameras may send broken data so this will simply reset the huffman table and assume the caller will handle this
+		cinfo->dc_huff_tbl_ptrs[0] = NULL;
+		return TRUE;
+	}
 
     for (i = 0; i < count; i++)
       INPUT_BYTE(cinfo, huffval[i], return FALSE);
@@ -1104,7 +1108,9 @@ read_markers (j_decompress_ptr cinfo)
        * Once the JPEG 3 version-number marker is well defined, this code
        * ought to change!
        */
-      ERREXIT1(cinfo, JERR_UNKNOWN_MARKER, cinfo->unread_marker);
+// Some cameras may send that that contains unhandled markers so allow them and
+// let the caller decide whenever the image data is correct or not
+//      ERREXIT1(cinfo, JERR_UNKNOWN_MARKER, cinfo->unread_marker);
       break;
     }
     /* Successfully processed marker, so reset state variable */

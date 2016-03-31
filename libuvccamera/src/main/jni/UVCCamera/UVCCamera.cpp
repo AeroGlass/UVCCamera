@@ -592,6 +592,7 @@ static uvc_error_t update_ctrl_values(uvc_device_handle_t *devh, control_value_t
 	RETURN(ret, uvc_error_t);
 }
 
+
 static uvc_error_t update_ctrl_values(uvc_device_handle_t *devh, control_value_t &values1, control_value_t &values2,
 	paramget_func_i32i32 get_func) {
 
