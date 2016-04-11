@@ -851,6 +851,12 @@ public class UVCCamera {
     	}
     }
 
+	//================================================================================
+
+	public static long getMonotonicClock() {
+		return nativeGetMonotonicTime();
+	}
+
 //================================================================================
 	public synchronized void updateCameraParams() {
     	if (mNativePtr != 0) {
@@ -1092,4 +1098,6 @@ public class UVCCamera {
     private final native int nativeUpdateZoomLimit(long id_camera);
     private static final native int nativeSetZoom(long id_camera, int zoom);
     private static final native int nativeGetZoom(long id_camera);
+
+	private static final native long nativeGetMonotonicTime();
 }
