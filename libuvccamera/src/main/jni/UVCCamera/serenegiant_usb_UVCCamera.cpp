@@ -180,6 +180,17 @@ static jint nativeSetPreviewSize(JNIEnv *env, jobject thiz,
 	RETURN(JNI_ERR, jint);
 }
 
+static jint nativeSetPreviewSizeFPS(JNIEnv *env, jobject thiz,
+	ID_TYPE id_camera, jint width, jint height, jint mode, jint minfps, jint maxfps) {
+
+	ENTER();
+	UVCCamera *camera = reinterpret_cast<UVCCamera *>(id_camera);
+	if (LIKELY(camera)) {
+		return camera->setPreviewSize(width, height, mode, minfps, maxfps);
+	}
+	RETURN(JNI_ERR, jint);
+}
+
 static jint nativeStartPreview(JNIEnv *env, jobject thiz,
 	ID_TYPE id_camera) {
 
@@ -343,6 +354,58 @@ static jint nativeGetExposureMode(JNIEnv *env, jobject thiz,
 	UVCCamera *camera = reinterpret_cast<UVCCamera *>(id_camera);
 	if (LIKELY(camera)) {
 		result = camera->getExposureMode();
+	}
+	RETURN(result, jint);
+}
+
+//CB add exposure control
+//======================================================================
+static jint nativeSetAbsExposureTime(JNIEnv *env, jobject thiz,
+	ID_TYPE id_camera, jint exposureTime) {
+
+	jint result = JNI_ERR;
+	ENTER();
+	UVCCamera *camera = reinterpret_cast<UVCCamera *>(id_camera);
+	if (LIKELY(camera)) {
+		result = camera->setAbsExposureTime(exposureTime);
+	}
+	RETURN(result, jint);
+}
+
+static jint nativeGetAbsExposureTime(JNIEnv *env, jobject thiz,
+	ID_TYPE id_camera) {
+
+	jint result = JNI_ERR;
+	ENTER();
+	UVCCamera *camera = reinterpret_cast<UVCCamera *>(id_camera);
+	if (LIKELY(camera)) {
+		result = camera->getAbsExposureTime();
+	}
+	RETURN(result, jint);
+}
+
+//CB add exposure control
+//======================================================================
+static jint nativeSetExposurePriority(JNIEnv *env, jobject thiz,
+	ID_TYPE id_camera, jint exposureTime) {
+
+	jint result = JNI_ERR;
+	ENTER();
+	UVCCamera *camera = reinterpret_cast<UVCCamera *>(id_camera);
+	if (LIKELY(camera)) {
+		result = camera->setExposurePriority(exposureTime);
+	}
+	RETURN(result, jint);
+}
+
+static jint nativeGetExposurePriority(JNIEnv *env, jobject thiz,
+	ID_TYPE id_camera) {
+
+	jint result = JNI_ERR;
+	ENTER();
+	UVCCamera *camera = reinterpret_cast<UVCCamera *>(id_camera);
+	if (LIKELY(camera)) {
+		result = camera->getExposurePriority();
 	}
 	RETURN(result, jint);
 }
@@ -862,6 +925,20 @@ static jint nativeGetZoom(JNIEnv *env, jobject thiz,
 	RETURN(result, jint);
 }
 
+static jlong nativeGetMonotonicTime(JNIEnv *env, jobject thiz) {
+	jlong result;
+	ENTER();
+	struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+
+    result = ((jlong)now.tv_sec) * 1000000 + ((jlong)now.tv_nsec)/1000;
+
+	RETURN(result, jlong);
+}
+
+
+
+
 //**********************************************************************
 //
 //**********************************************************************
@@ -889,6 +966,7 @@ static JNINativeMethod methods[] = {
 
 	{ "nativeGetSupportedSize",			"(J)Ljava/lang/String;", (void *) nativeGetSupportedSize },
 	{ "nativeSetPreviewSize",			"(JIII)I", (void *) nativeSetPreviewSize },
+	{ "nativeSetPreviewSizeFPS",			"(JIIIII)I", (void *) nativeSetPreviewSizeFPS },
 	{ "nativeStartPreview",				"(J)I", (void *) nativeStartPreview },
 	{ "nativeStopPreview",				"(J)I", (void *) nativeStopPreview },
 	{ "nativeSetPreviewDisplay",		"(JLandroid/view/Surface;)I", (void *) nativeSetPreviewDisplay },
@@ -902,6 +980,12 @@ static JNINativeMethod methods[] = {
 
 	{ "nativeSetExposureMode",			"(JI)I", (void *) nativeSetExposureMode },
 	{ "nativeGetExposureMode",			"(J)I", (void *) nativeGetExposureMode },
+	
+	{ "nativeSetExposurePriority",			"(JI)I", (void *) nativeSetExposurePriority },
+	{ "nativeGetExposurePriority",			"(J)I", (void *) nativeGetExposurePriority },
+	
+	{ "nativeSetAbsExposureTime",			"(JI)I", (void *) nativeSetAbsExposureTime },
+	{ "nativeGetAbsExposureTime",			"(J)I", (void *) nativeGetAbsExposureTime },
 
 	{ "nativeSetAutoFocus",				"(JZ)I", (void *) nativeSetAutoFocus },
 	{ "nativeGetAutoFocus",				"(J)I", (void *) nativeGetAutoFocus },
@@ -951,6 +1035,8 @@ static JNINativeMethod methods[] = {
 	{ "nativeUpdateZoomLimit",			"(J)I", (void *) nativeUpdateZoomLimit },
 	{ "nativeSetZoom",					"(JI)I", (void *) nativeSetZoom },
 	{ "nativeGetZoom",					"(J)I", (void *) nativeGetZoom },
+
+	{ "nativeGetMonotonicTime",			"()J", (void *) nativeGetMonotonicTime },
 };
 
 int register_uvccamera(JNIEnv *env) {

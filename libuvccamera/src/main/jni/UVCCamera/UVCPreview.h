@@ -58,6 +58,7 @@ private:
 	volatile bool mIsRunning;
 	int requestWidth, requestHeight, requestMode, requestFps;
 	int frameWidth, frameHeight;
+	int minFPS, maxFPS;
 	int frameMode;
 	size_t frameBytes;
 	pthread_t preview_thread;
@@ -104,6 +105,7 @@ public:
 
 	inline const bool isRunning() const;
 	int setPreviewSize(int width, int height, int mode);
+	int setPreviewSize(int width, int height, int mode, int minfps, int maxfps);
 	int setPreviewDisplay(ANativeWindow *preview_window);
 	int setFrameCallback(JNIEnv *env, jobject frame_callback_obj, int pixel_format);
 	int startPreview();

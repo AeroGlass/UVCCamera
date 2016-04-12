@@ -162,6 +162,15 @@ int UVCCamera::setPreviewSize(int width, int height, int mode) {
 	RETURN(result, int);
 }
 
+int UVCCamera::setPreviewSize(int width, int height, int mode, int minfps, int maxfps) {
+	ENTER();
+	int result = EXIT_FAILURE;
+	if (mPreview) {
+		result = mPreview->setPreviewSize(width, height, mode, minfps, maxfps);
+	}
+	RETURN(result, int);
+}
+
 int UVCCamera::setPreviewDisplay(ANativeWindow *preview_window) {
 	ENTER();
 	int result = EXIT_FAILURE;
@@ -279,6 +288,59 @@ int UVCCamera::getExposureMode() {
 		int mode;
 		r = uvc_get_ae_mode(mDeviceHandle, &mode, UVC_GET_CUR);
 //		LOGI("ae:%d", mode);
+		if (LIKELY(!r)) {
+			r = mode;
+		}
+	}
+	RETURN(r, int);
+}
+
+
+// CB add exposure control
+int UVCCamera::setAbsExposureTime(int time) {
+	ENTER();
+	int r = UVC_ERROR_ACCESS;
+	if LIKELY((mDeviceHandle)){// && (mCtrlSupports & CTRL_AE_ABS)) {
+//		LOGI("et:%d", time);
+		r = uvc_set_exposure_abs(mDeviceHandle, time);
+	}
+	RETURN(r, int);
+}
+
+int UVCCamera::getAbsExposureTime() {
+
+	ENTER();
+	int r = UVC_ERROR_ACCESS;
+	if LIKELY((mDeviceHandle)){// && (mCtrlSupports & CTRL_AE_ABS)) {
+		int time;
+		r = uvc_get_exposure_abs(mDeviceHandle, &time, UVC_GET_CUR);
+//		LOGI("et:%d", time);
+		if (LIKELY(!r)) {
+			r = time;
+		}
+	}
+	RETURN(r, int);
+}
+
+// CB add exposure control
+int UVCCamera::setExposurePriority(int mode) {
+	ENTER();
+	int r = UVC_ERROR_ACCESS;
+	if LIKELY((mDeviceHandle)){// && (mCtrlSupports & CTRL_AE_ABS)) {
+//		LOGI("et:%d", time);
+		r = uvc_set_ae_priority(mDeviceHandle, (uint8_t)mode);
+	}
+	RETURN(r, int);
+}
+
+int UVCCamera::getExposurePriority() {
+
+	ENTER();
+	int r = UVC_ERROR_ACCESS;
+	if LIKELY((mDeviceHandle)){// && (mCtrlSupports & CTRL_AE_ABS)) {
+		uint8_t mode;
+		r = uvc_get_ae_priority(mDeviceHandle, &mode, UVC_GET_CUR);
+//		LOGI("et:%d", time);
 		if (LIKELY(!r)) {
 			r = mode;
 		}

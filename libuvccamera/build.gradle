@@ -1,5 +1,7 @@
-apply plugin: 'com.android.library'
 import org.apache.tools.ant.taskdefs.condition.Os
+import com.android.build.gradle.tasks.NdkCompile
+
+apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 22
@@ -16,35 +18,43 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
-	sourceSets {
-		main {
-			jniLibs.srcDir 'src/main/libs'
-			jni.srcDirs = []
-		}
-	}
-}
 
-tasks.withType(JavaCompile) {
-	compileTask -> compileTask.dependsOn ndkBuild
-}
-
-task ndkBuild(type: Exec, description: 'Compile JNI source via NDK') {
-	def ndkBuildingDir = project.plugins.findPlugin('com.android.library').sdkHandler.getNdkFolder().absolutePath
-	def ndkBuildPath = ndkBuildingDir
-	if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-		ndkBuildPath = ndkBuildingDir + '/ndk-build.cmd'
-	} else {
-		ndkBuildPath = ndkBuildingDir + '/ndk-build'
-	}
-
-    def parallelCommand = '';
-    if (project.ext.has('ndkBuildParallelSlots')) {
-        parallelCommand = '-j' + project.ext.ndkBuildParallelSlots
+    sourceSets {
+        main {
+           jniLibs.srcDir 'src/main/libs'
+        }
     }
 
-    def ndkObjDir = new File(project.getBuildDir().getAbsolutePath() + File.separator
-								+ 'intermediates' + File.separator
-								+ 'ndk' + File.separator
-								+ 'obj' + File.separator)
-	commandLine ndkBuildPath, parallelCommand, 'NDK_OUT='+ndkObjDir , '-C', file('src/main').absolutePath
+    tasks.withType(JavaCompile) {
+        compileTask -> compileTask.dependsOn ndkBuild
+    }
+
+    task ndkBuild(type: Exec, description: 'Compile JNI source via NDK') {
+        def ndkBuildingDir = project.plugins.findPlugin('com.android.library').sdkHandler.getNdkFolder().absolutePath
+        def ndkBuildPath = ndkBuildingDir
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            ndkBuildPath = ndkBuildingDir + '/ndk-build.cmd'
+        } else {
+            ndkBuildPath = ndkBuildingDir + '/ndk-build'
+        }
+
+        def parallelCommand = '';
+        if (project.ext.has('ndkBuildParallelSlots')) {
+            parallelCommand = '-j' + project.ext.ndkBuildParallelSlots
+        }
+
+        def ndkObjDir = new File(project.getBuildDir().getAbsolutePath() + File.separator
+                                 + 'intermediates' + File.separator
+                                 + 'ndk' + File.separator
+                                 + 'obj' + File.separator)
+        commandLine ndkBuildPath, parallelCommand, 'NDK_OUT='+ndkObjDir , '-C', file('src/main').absolutePath
+    }
+}
+
+// Empty out actions for NdkCompile tasks so andorid.sourceSets.main.jni can be set to be used in AndroidStudio
+// This will make NdkCompile tasks do nothing, use this when custom NdkBuild task is used instead of android's generated NdkCompile
+rootProject.gradle.projectsEvaluated {
+    project.tasks.withType(NdkCompile) { compileTask ->
+        compileTask.setActions(new ArrayList<Action<Task>>())
+    }
 }
