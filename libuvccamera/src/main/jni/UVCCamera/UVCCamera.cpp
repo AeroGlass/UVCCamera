@@ -79,6 +79,7 @@ void UVCCamera::clearCameraParams() {
 	mZoom.min = mZoom.max = mZoom.def = 0;
 	mWhiteBlance.min = mWhiteBlance.max = mWhiteBlance.def = 0;
 	mFocus.min = mFocus.max = mFocus.def = 0;
+	mExposureAbs.min = mExposureAbs.max = mExposureAbs.def = 0;
 }
 
 int UVCCamera::connect(int vid, int pid, int fd, const char *usbfs) {
@@ -295,7 +296,6 @@ int UVCCamera::getExposureMode() {
 	RETURN(r, int);
 }
 
-
 // CB add exposure control
 int UVCCamera::setAbsExposureTime(int time) {
 	ENTER();
@@ -465,6 +465,36 @@ static uvc_error_t update_ctrl_values(uvc_device_handle_t *devh, control_value_t
 	RETURN(ret, uvc_error_t);
 }
 
+static uvc_error_t update_ctrl_values(uvc_device_handle_t *devh, control_value_t &values,
+	paramget_func_i32 get_func) {
+
+	ENTER();
+
+	uvc_error_t ret = UVC_SUCCESS;
+	if (!values.min && !values.max) {
+		int32_t value;
+		ret = get_func(devh, &value, UVC_GET_MIN);
+		if (LIKELY(!ret)) {
+			values.min = value;
+			LOGV("update_params:min value=%d,min=%d", value, values.min);
+			ret = get_func(devh, &value, UVC_GET_MAX);
+			if (LIKELY(!ret)) {
+				values.max = value;
+				LOGV("update_params:max value=%d,max=%d", value, values.max);
+				ret = get_func(devh, &value, UVC_GET_DEF);
+				if (LIKELY(!ret)) {
+					values.def = value;
+					LOGV("update_params:def value=%d,def=%d", value, values.def);
+				}
+			}
+		}
+	}
+	if (UNLIKELY(ret)) {
+		LOGD("update_params failed:err=%d", ret);
+	}
+	RETURN(ret, uvc_error_t);
+}
+
 #define UPDATE_CTRL_VALUES(VAL,FUNC) \
 	ret = update_ctrl_values(mDeviceHandle, VAL, FUNC); \
 	if (LIKELY(!ret)) { \
@@ -475,6 +505,14 @@ static uvc_error_t update_ctrl_values(uvc_device_handle_t *devh, control_value_t
 		MARK("failed to UPDATE_CTRL_VALUES"); \
 	} \
 
+int UVCCamera::updateExposureLimit(int &min, int &max, int &def) {
+	ENTER();
+	int ret = UVC_ERROR_IO;
+	if (mPUSupports & CTRL_AE_ABS) {
+		UPDATE_CTRL_VALUES(mExposureAbs, uvc_get_exposure_abs);
+	}
+	RETURN(ret, int);
+}
 
 /**
  * カメラコントロール設定の下請け

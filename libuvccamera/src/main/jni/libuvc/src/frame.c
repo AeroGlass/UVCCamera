@@ -1235,6 +1235,40 @@ uvc_error_t uvc_yuyv2iyuv420SP(uvc_frame_t *in, uvc_frame_t *out) {
 	RETURN(UVC_SUCCESS, uvc_error_t);
 }
 
+uvc_error_t uvc_yuyv2gray8(uvc_frame_t *in, uvc_frame_t *out) {
+	ENTER();
+
+	if (UNLIKELY(in->frame_format != UVC_FRAME_FORMAT_YUYV))
+		RETURN(UVC_ERROR_INVALID_PARAM, uvc_error_t);
+
+	if (UNLIKELY(uvc_ensure_frame_size(out, in->width * in->height) < 0))
+		return UVC_ERROR_NO_MEM;
+
+	const uint8_t *src = in->data;
+	uint8_t *dest = out->data;
+	const int32_t width = in->width;
+	const int32_t height = in->height;
+	const int32_t src_width = in->step;
+	const int32_t src_height = in->height;
+	const int32_t dest_width = out->width = out->step = in->width;
+	const int32_t dest_height = out->height = in->height;
+	const uint32_t hh = src_height < dest_height ? src_height : dest_height;
+	uint8_t *y = dest;
+	int h, w;
+	for (h = 0; h < hh; h++) {
+		const uint8_t *yuv = src + src_width * h;
+		for (w = 0; w < width; w += 4) {
+			*(y++) = yuv[0];	// y
+			*(y++) = yuv[2];	// y'
+			*(y++) = yuv[4];	// y''
+			*(y++) = yuv[6];	// y'''
+			yuv += 8;	// (1pixel=2bytes)x4pixel=8bytes
+		}
+	}
+
+	RETURN(UVC_SUCCESS, uvc_error_t);
+}
+
 /** @brief Convert a frame to RGB565
  * @ingroup frame
  *
