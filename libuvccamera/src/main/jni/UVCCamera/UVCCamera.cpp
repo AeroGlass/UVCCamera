@@ -876,8 +876,7 @@ int UVCCamera::updateExposurePriorityLimit(int &min, int &max, int &def) {
 int UVCCamera::setExposurePriority(int priority) {
 	ENTER();
 	int r = UVC_ERROR_ACCESS;
-	if LIKELY((mDeviceHandle)){// && (mCtrlSupports & CTRL_AE_ABS)) {
-//	if LIKELY((mDeviceHandle) && (mCtrlSupports & CTRL_AE_PRIORITY)) {
+	if LIKELY((mDeviceHandle) && (mCtrlSupports & CTRL_AE_PRIORITY)) {
 //		LOGI("ae priority:%d", priority);
 		r = uvc_set_ae_priority(mDeviceHandle, priority/* & 0xff*/);
 	}
@@ -889,8 +888,7 @@ int UVCCamera::getExposurePriority() {
 
 	ENTER();
 	int r = UVC_ERROR_ACCESS;
-	if LIKELY((mDeviceHandle)){// && (mCtrlSupports & CTRL_AE_ABS)) {
-//	if LIKELY((mDeviceHandle) && (mCtrlSupports & CTRL_AE_PRIORITY)) {
+	if LIKELY((mDeviceHandle) && (mCtrlSupports & CTRL_AE_PRIORITY)) {
 		uint8_t priority;
 		r = uvc_get_ae_priority(mDeviceHandle, &priority, UVC_GET_CUR);
 //		LOGI("ae priority:%d", priority);
@@ -934,32 +932,6 @@ int UVCCamera::getExposure() {
 //		LOGI("ae_abs:%d", ae_abs);
 		if (LIKELY(!r)) {
 			r = ae_abs;
-		}
-	}
-	RETURN(r, int);
-}
-
-//======================================================================
-int UVCCamera::setAbsExposureTime(int time) {
-	ENTER();
-	int r = UVC_ERROR_ACCESS;
-	if LIKELY((mDeviceHandle)){// && (mCtrlSupports & CTRL_AE_ABS)) {
-//		LOGI("et:%d", time);
-		r = uvc_set_exposure_abs(mDeviceHandle, time);
-	}
-	RETURN(r, int);
-}
-
-int UVCCamera::getAbsExposureTime() {
-
-	ENTER();
-	int r = UVC_ERROR_ACCESS;
-	if LIKELY((mDeviceHandle)){// && (mCtrlSupports & CTRL_AE_ABS)) {
-		int time;
-		r = uvc_get_exposure_abs(mDeviceHandle, &time, UVC_GET_CUR);
-//		LOGI("et:%d", time);
-		if (LIKELY(!r)) {
-			r = time;
 		}
 	}
 	RETURN(r, int);

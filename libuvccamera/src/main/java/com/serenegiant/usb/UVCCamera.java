@@ -533,7 +533,7 @@ public class UVCCamera {
 	 */
 	public synchronized void setAbsExposureTime(final int time) { //1 ms = 10
 		if (mNativePtr != 0) {
-			nativeSetAbsExposureTime(mNativePtr, time);
+			nativeSetExposure(mNativePtr, time);
 		}
 	}
 
@@ -541,7 +541,7 @@ public class UVCCamera {
 	 * @return time
 	 */
 	public synchronized int getAbsExposureTime() {
-		return nativeGetAbsExposureTime(mNativePtr);
+		return nativeGetExposure(mNativePtr);
 	}
 
 	/**
@@ -1162,9 +1162,6 @@ public class UVCCamera {
 	private final native int nativeUpdateExposureLimit(final long id_camera);
     private static final native int nativeSetExposure(final long id_camera, final int exposure);
     private static final native int nativeGetExposure(final long id_camera);
-
-	private static final native int nativeSetAbsExposureTime(long id_camera, int exposureTime);
-	private static final native int nativeGetAbsExposureTime(long id_camera);
 
 	private final native int nativeUpdateExposureRelLimit(final long id_camera);
     private static final native int nativeSetExposureRel(final long id_camera, final int exposure_rel);

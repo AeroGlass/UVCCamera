@@ -380,30 +380,6 @@ static jint nativeSetScanningMode(JNIEnv *env, jobject thiz,
 	RETURN(result, jint);
 }
 
-static jint nativeSetAbsExposureTime(JNIEnv *env, jobject thiz,
-									 ID_TYPE id_camera, jint exposureTime) {
-
-	jint result = JNI_ERR;
-	ENTER();
-	UVCCamera *camera = reinterpret_cast<UVCCamera *>(id_camera);
-	if (LIKELY(camera)) {
-		result = camera->setAbsExposureTime(exposureTime);
-	}
-	RETURN(result, jint);
-}
-
-static jint nativeGetAbsExposureTime(JNIEnv *env, jobject thiz,
-									 ID_TYPE id_camera) {
-
-	jint result = JNI_ERR;
-	ENTER();
-	UVCCamera *camera = reinterpret_cast<UVCCamera *>(id_camera);
-	if (LIKELY(camera)) {
-		result = camera->getAbsExposureTime();
-	}
-	RETURN(result, jint);
-}
-
 static jint nativeGetScanningMode(JNIEnv *env, jobject thiz,
 	ID_TYPE id_camera) {
 
@@ -2104,9 +2080,6 @@ static JNINativeMethod methods[] = {
 	{ "nativeSetExposureMode",			"(JI)I", (void *) nativeSetExposureMode },
 	{ "nativeGetExposureMode",			"(J)I", (void *) nativeGetExposureMode },
 	
-	{ "nativeSetAbsExposureTime",			"(JI)I", (void *) nativeSetAbsExposureTime },
-	{ "nativeGetAbsExposureTime",			"(J)I", (void *) nativeGetAbsExposureTime },
-
 	{ "nativeUpdateExposurePriorityLimit","(J)I", (void *) nativeUpdateExposurePriorityLimit },
 	{ "nativeSetExposurePriority",		"(JI)I", (void *) nativeSetExposurePriority },
 	{ "nativeGetExposurePriority",		"(J)I", (void *) nativeGetExposurePriority },
