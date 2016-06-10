@@ -525,14 +525,10 @@ void UVCPreview::do_preview(uvc_stream_ctrl_t *ctrl) {
 
 	uvc_frame_t *frame = NULL;
 	uvc_frame_t *frame_mjpeg = NULL;
-/*
-ORIGINAL
 	uvc_error_t result = uvc_start_streaming_bandwidth(
 		mDeviceHandle, ctrl, uvc_preview_frame_callback, (void *)this, requestBandwidth, 0);
-*/
+
 	uvc_frame_t *frame_yuyv = NULL;
-	uvc_error_t result = uvc_start_iso_streaming(
-		mDeviceHandle, ctrl, uvc_preview_frame_callback, (void *)this);
 
 	if (LIKELY(!result)) {
 		clearPreviewFrame();
@@ -547,7 +543,7 @@ ORIGINAL
 				frame_mjpeg = waitPreviewFrame();
 				if (LIKELY(frame_mjpeg)) {
 /*
-ORIGINAL
+UPSTREAM
 					frame = get_frame(frame_mjpeg->width * frame_mjpeg->height * 2);
 					result = uvc_mjpeg2yuyv(frame_mjpeg, frame);   // MJPEG => yuyv
 					recycle_frame(frame_mjpeg);
@@ -570,7 +566,7 @@ ORIGINAL
 		} else {
 			// yuvyv mode
 /*
-ORIGINAL
+UPSTREAM
 			for ( ; LIKELY(isRunning()) ; ) {
 				frame = waitPreviewFrame();
 				if (LIKELY(frame)) {
