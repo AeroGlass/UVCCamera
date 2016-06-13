@@ -528,7 +528,7 @@ void UVCPreview::do_preview(uvc_stream_ctrl_t *ctrl) {
 	uvc_error_t result = uvc_start_streaming_bandwidth(
 		mDeviceHandle, ctrl, uvc_preview_frame_callback, (void *)this, requestBandwidth, 0);
 
-	uvc_frame_t *frame_yuyv = NULL;
+	uvc_frame_t *frame_gray = NULL;
 
 	if (LIKELY(!result)) {
 		clearPreviewFrame();
@@ -542,51 +542,62 @@ void UVCPreview::do_preview(uvc_stream_ctrl_t *ctrl) {
 			for ( ; LIKELY(isRunning()) ; ) {
 				frame_mjpeg = waitPreviewFrame();
 				if (LIKELY(frame_mjpeg)) {
-/*
-UPSTREAM
-					frame = get_frame(frame_mjpeg->width * frame_mjpeg->height * 2);
-					result = uvc_mjpeg2yuyv(frame_mjpeg, frame);   // MJPEG => yuyv
-					recycle_frame(frame_mjpeg);
-*/
-					if (mPixelFormat == PIXEL_FORMAT_GREY) {
-						frame = uvc_allocate_frame(frame_mjpeg->width * frame_mjpeg->height);
-						result = uvc_mjpeg2grey8(frame_mjpeg, frame);   // MJPEG => greyscale
-					} else {
-						frame = uvc_allocate_frame(frame_mjpeg->width * frame_mjpeg->height * 2);
+					if (mPreviewWindow) {
+						frame = get_frame(frame_mjpeg->width * frame_mjpeg->height * 2);
 						result = uvc_mjpeg2yuyv(frame_mjpeg, frame);    // MJPEG => yuyv
-					}
-					uvc_free_frame(frame_mjpeg);
-					if (LIKELY(!result)) {
-						addCaptureFrame(frame);
+						if (LIKELY(!result)) {
+							frame = draw_preview_one(frame, &mPreviewWindow, uvc_any2rgbx, 4);
+							if (mPixelFormat == PIXEL_FORMAT_GREY) {
+								frame_gray = get_frame(frame->width * frame->height);
+								result = uvc_yuyv2gray8(frame, frame_gray);    // YUYV => greyscale
+								recycle_frame(frame);
+								if (LIKELY(!result)) {
+									addCaptureFrame(frame_gray);
+								} else {
+									recycle_frame(frame_gray);
+								}
+							} else {
+								addCaptureFrame(frame);
+							}
+						} else {
+							recycle_frame(frame);
+						}
 					} else {
-						recycle_frame(frame);
+						if (mPixelFormat != PIXEL_FORMAT_GREY) {
+							frame = get_frame(frame_mjpeg->width * frame_mjpeg->height * 2);
+							result = uvc_mjpeg2yuyv(frame_mjpeg, frame);    // MJPEG => yuyv
+						} else {
+							frame = get_frame(frame_mjpeg->width * frame_mjpeg->height);
+							result = uvc_mjpeg2grey8(frame_mjpeg, frame);   // MJPEG => greyscale
+						}
+						if (LIKELY(!result)) {
+							addCaptureFrame(frame);
+						} else {
+							recycle_frame(frame);
+						}
 					}
+					recycle_frame(frame_mjpeg);
 				}
 			}
 		} else {
 			// yuvyv mode
-/*
-UPSTREAM
 			for ( ; LIKELY(isRunning()) ; ) {
 				frame = waitPreviewFrame();
 				if (LIKELY(frame)) {
-					frame = draw_preview_one(frame, &mPreviewWindow, uvc_any2rgbx, 4);
-					addCaptureFrame(frame);
-*/
-			while (LIKELY(isRunning())) {
-				frame_yuyv = waitPreviewFrame();
-				if (LIKELY(frame_yuyv)) {
+					if (mPreviewWindow) {
+						frame = draw_preview_one(frame, &mPreviewWindow, uvc_any2rgbx, 4);
+					}
 					if (mPixelFormat == PIXEL_FORMAT_GREY) {
-						frame = uvc_allocate_frame(frame_yuyv->width * frame_yuyv->height);
-						result = uvc_yuyv2gray8(frame_yuyv, frame);    // YUYV => greyscale
-						uvc_free_frame(frame_yuyv);
+						frame_gray = get_frame(frame->width * frame->height);
+						result = uvc_yuyv2gray8(frame, frame_gray);    // YUYV => greyscale
+						recycle_frame(frame);
 						if (LIKELY(!result)) {
-							addCaptureFrame(frame);
+							addCaptureFrame(frame_gray);
 						} else {
-							uvc_free_frame(frame);
+							recycle_frame(frame_gray);
 						}
 					} else {
-						addCaptureFrame(frame_yuyv);
+						addCaptureFrame(frame);
 					}
 				}
 			}
