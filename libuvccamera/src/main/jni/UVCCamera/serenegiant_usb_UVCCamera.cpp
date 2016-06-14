@@ -206,17 +206,6 @@ static jint nativeSetPreviewSize(JNIEnv *env, jobject thiz,
 	RETURN(JNI_ERR, jint);
 }
 
-static jint nativeSetPreviewSizeFPS(JNIEnv *env, jobject thiz,
-	ID_TYPE id_camera, jint width, jint height, jint mode, jint minfps, jint maxfps) {
-
-	ENTER();
-	UVCCamera *camera = reinterpret_cast<UVCCamera *>(id_camera);
-	if (LIKELY(camera)) {
-		return camera->setPreviewSize(width, height, mode, minfps, maxfps);
-	}
-	RETURN(JNI_ERR, jint);
-}
-
 static jint nativeStartPreview(JNIEnv *env, jobject thiz,
 	ID_TYPE id_camera) {
 

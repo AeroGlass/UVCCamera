@@ -329,25 +329,6 @@ public class UVCCamera {
 		}
 	}
 
-	/**
-	 * Set preview size and preview mode
-	 * @param width
-	 @param height
-	 @param mode 0:yuyv, other:MJPEG
-	 @param minfps
-	 @param maxfps
-	 */
-	public void setPreviewSize(final int width, final int height, final int mode, final int minfps, final int maxfps) {
-		if ((width == 0) || (height == 0))
-			throw new IllegalArgumentException("invalid preview size");
-		if (mNativePtr != 0) {
-			final int result = nativeSetPreviewSizeFPS(mNativePtr, width, height, mode, minfps, maxfps);
-			if (result != 0)
-				throw new IllegalArgumentException("Failed to set preview size");
-			mCurrentPreviewMode = mode;
-		}
-	}
-
 	public List<Size> getSupportedSizeList() {
 		final int type = (mCurrentPreviewMode > 0) ? 6 : 4;
 		return getSupportedSize(type, mSupportedSize);

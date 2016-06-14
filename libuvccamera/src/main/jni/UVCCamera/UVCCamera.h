@@ -116,14 +116,6 @@ public:
     int frameTransferFormat;
 };
 
-struct FrameFormatInfo {
-public:
-	int frameWidth;
-    int frameHeight;
-    int maxFPS;
-    int frameTransferFormat;
-};
-
 class UVCCamera {
 	char *mUsbFs;
 	uvc_context_t *mContext;
