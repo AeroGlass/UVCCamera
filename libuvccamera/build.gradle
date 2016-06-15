@@ -4,12 +4,12 @@ import com.android.build.gradle.tasks.NdkCompile
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 22
-    buildToolsVersion "22.0.1"
+    compileSdkVersion Integer.valueOf(project.ext.androidCompileSDKVersion)
+    buildToolsVersion project.ext.androidBuildToolsVersion
 
     defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 22
+        minSdkVersion Integer.valueOf(project.ext.androidMinSDKVersion)
+        targetSdkVersion Integer.valueOf(project.ext.androidTargetSDKVersion)
     }
 
     buildTypes {
