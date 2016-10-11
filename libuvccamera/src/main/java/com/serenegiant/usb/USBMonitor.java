@@ -326,7 +326,7 @@ public final class USBMonitor {
 		}
 	};
 
-	private final void processConnect(final UsbDevice device) {
+	public final void processConnect(final UsbDevice device) {
 		if (DEBUG) Log.v(TAG, "processConnect:");
 		mHandler.post(new Runnable() {
 			@Override
