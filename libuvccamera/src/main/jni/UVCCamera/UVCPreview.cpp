@@ -480,9 +480,11 @@ void UVCPreview::do_preview(uvc_stream_ctrl_t *ctrl) {
 				if (LIKELY(frame_mjpeg)) {
 					if (mPixelFormat == PIXEL_FORMAT_GREY) {
 						frame = uvc_allocate_frame(frame_mjpeg->width * frame_mjpeg->height);
+						frame->capture_time = frame_mjpeg->capture_time;
 						result = uvc_mjpeg2grey8(frame_mjpeg, frame);   // MJPEG => greyscale
 					} else {
 						frame = uvc_allocate_frame(frame_mjpeg->width * frame_mjpeg->height * 2);
+						frame->capture_time = frame_mjpeg->capture_time;
 						result = uvc_mjpeg2yuyv(frame_mjpeg, frame);    // MJPEG => yuyv
 					}
 					uvc_free_frame(frame_mjpeg);
@@ -500,6 +502,7 @@ void UVCPreview::do_preview(uvc_stream_ctrl_t *ctrl) {
 				if (LIKELY(frame_yuyv)) {
 					if (mPixelFormat == PIXEL_FORMAT_GREY) {
 						frame = uvc_allocate_frame(frame_yuyv->width * frame_yuyv->height);
+						frame->capture_time = frame_yuyv->capture_time;
 						result = uvc_yuyv2gray8(frame_yuyv, frame);    // YUYV => greyscale
 						uvc_free_frame(frame_yuyv);
 						if (LIKELY(!result)) {
@@ -509,6 +512,7 @@ void UVCPreview::do_preview(uvc_stream_ctrl_t *ctrl) {
 						}
 					} else if (mPixelFormat == PIXEL_FORMAT_GREYLEOPARD ) {
 						frame = uvc_allocate_frame(frame_yuyv->width * frame_yuyv->height);
+						frame->capture_time = frame_yuyv->capture_time;
 						uint16_t* data = (uint16_t*)frame_yuyv->data;
 						uint8_t* out = (uint8_t*)frame->data;
 						uint8_t tmp;
@@ -870,6 +874,7 @@ void UVCPreview::do_capture_callback(JNIEnv *env, uvc_frame_t *frame) {
 				callback_frame = uvc_allocate_frame(callbackPixelBytes);
 				if (LIKELY(callback_frame)) {
 					int b = mFrameCallbackFunc(frame, callback_frame);
+					callback_frame->capture_time = frame->capture_time;
 					uvc_free_frame(frame);
 					if (UNLIKELY(b)) {
 						LOGW("failed to convert for callback frame");

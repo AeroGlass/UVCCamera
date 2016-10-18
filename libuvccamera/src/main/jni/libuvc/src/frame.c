@@ -78,6 +78,9 @@ uvc_error_t uvc_ensure_frame_size(uvc_frame_t *frame, size_t need_bytes) {
 uvc_frame_t *uvc_allocate_frame(size_t data_bytes) {
 	uvc_frame_t *frame = malloc(sizeof(*frame));	// FIXME using buffer pool is better performance(5-30%) than directory use malloc everytime.
 
+	frame->capture_time.tv_sec = 0;
+	frame->capture_time.tv_usec = 0;
+
 	if (UNLIKELY(!frame))
 		return NULL;
 
