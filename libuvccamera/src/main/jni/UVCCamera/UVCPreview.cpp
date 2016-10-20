@@ -476,9 +476,11 @@ void UVCPreview::do_preview(uvc_stream_ctrl_t *ctrl) {
 				if (LIKELY(frame_mjpeg)) {
 					if (mPixelFormat == PIXEL_FORMAT_GREY) {
 						frame = uvc_allocate_frame(frame_mjpeg->width * frame_mjpeg->height);
+						frame->capture_time = frame_mjpeg->capture_time;
 						result = uvc_mjpeg2grey8(frame_mjpeg, frame);   // MJPEG => greyscale
 					} else {
 						frame = uvc_allocate_frame(frame_mjpeg->width * frame_mjpeg->height * 2);
+						frame->capture_time = frame_mjpeg->capture_time;
 						result = uvc_mjpeg2yuyv(frame_mjpeg, frame);    // MJPEG => yuyv
 					}
 					uvc_free_frame(frame_mjpeg);
@@ -496,6 +498,7 @@ void UVCPreview::do_preview(uvc_stream_ctrl_t *ctrl) {
 				if (LIKELY(frame_yuyv)) {
 					if (mPixelFormat == PIXEL_FORMAT_GREY) {
 						frame = uvc_allocate_frame(frame_yuyv->width * frame_yuyv->height);
+						frame->capture_time = frame_yuyv->capture_time;
 						result = uvc_yuyv2gray8(frame_yuyv, frame);    // YUYV => greyscale
 						uvc_free_frame(frame_yuyv);
 						if (LIKELY(!result)) {
