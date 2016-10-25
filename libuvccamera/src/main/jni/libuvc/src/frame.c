@@ -81,6 +81,9 @@ uvc_frame_t *uvc_allocate_frame(size_t data_bytes) {
 	if (UNLIKELY(!frame))
 		return NULL;
 
+	frame->capture_time.tv_sec = 0;
+ 	frame->capture_time.tv_usec = 0;
+
 #ifndef __ANDROID__
 	// XXX in many case, it is not neccesary to clear because all fields are set before use
 	// therefore we remove this to improve performace, but be care not to forget to set fields before use
