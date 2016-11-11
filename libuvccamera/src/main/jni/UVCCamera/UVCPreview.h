@@ -46,6 +46,7 @@ typedef uvc_error_t (*convFunc_t)(uvc_frame_t *in, uvc_frame_t *out);
 #define PIXEL_FORMAT_YUV20SP 4
 #define PIXEL_FORMAT_NV21 5		// YVU420SemiPlanar
 #define PIXEL_FORMAT_GREY 6
+#define PIXEL_FORMAT_GREYLEOPARD 7
 
 // for callback to Java object
 typedef struct {
