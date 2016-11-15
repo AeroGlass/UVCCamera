@@ -941,6 +941,21 @@ int UVCCamera::getZoom() {
 	RETURN(0, int);
 }
 
+int UVCCamera::setTriggerMode(int trigger_mode) {
+	ENTER();
+	int ret = uvc_set_trigger_mode(mDeviceHandle, trigger_mode);
+    RETURN(ret, int);
+}
+int UVCCamera::getTriggerMode() {
+	ENTER();
+	uint8_t value;
+	int ret = uvc_get_trigger_mode(mDeviceHandle, &value, UVC_GET_CUR);
+	if (LIKELY(!ret))
+		return value;
+	RETURN(-1, int);
+}
+
+
 void probeFunc(int w, int h, int maxFPS, int format, void *userdata) {
 	if (userdata == NULL) {
 		return;

@@ -852,7 +852,22 @@ public class UVCCamera {
     	}
     }
 
-	//================================================================================
+//================================================================================
+
+//================================================================================
+	public synchronized void setTriggerMode(final int trigger_mode) {
+		if (mNativePtr != 0) {
+			nativeSetTriggerMode(mNativePtr, trigger_mode);
+		}
+	}
+
+	public synchronized int getTriggerMode() {
+		int result = 0;
+		if (mNativePtr != 0) {
+			result = nativeGetTriggerMode(mNativePtr);
+		}
+		return result;
+	}
 
 //================================================================================
 	public synchronized void updateCameraParams() {
@@ -1095,4 +1110,7 @@ public class UVCCamera {
     private final native int nativeUpdateZoomLimit(long id_camera);
     private static final native int nativeSetZoom(long id_camera, int zoom);
     private static final native int nativeGetZoom(long id_camera);
+
+	private static final native int nativeSetTriggerMode(long id_camera, int trigger_mode);
+	private static final native int nativeGetTriggerMode(long id_camera);
 }

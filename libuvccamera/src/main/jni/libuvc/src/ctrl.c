@@ -47,6 +47,8 @@
 #include "libuvc/libuvc.h"
 #include "libuvc/libuvc_internal.h"
 
+#include <android/log.h>
+
 static const int REQ_TYPE_SET = 0x21;
 static const int REQ_TYPE_GET = 0xa1;
 
@@ -1717,3 +1719,46 @@ uvc_error_t uvc_set_analog_video_lockstate(uvc_device_handle_t *devh, uint8_t lo
 	else
 		return ret;
 }
+
+//----------------------------------------------------------------------
+
+uvc_error_t uvc_get_trigger_mode(uvc_device_handle_t *devh, uint8_t *trigger_mode,
+		enum uvc_req_code req_code) {
+	uint8_t data[2];
+	uvc_error_t ret;
+
+	ret = libusb_control_transfer(devh->usb_devh, REQ_TYPE_GET, req_code,
+			0x0b00,
+			0x0300,
+			data, sizeof(data), CTRL_TIMEOUT_MILLIS);
+
+	if (LIKELY(ret == sizeof(data))) {
+		*trigger_mode = data[0];
+		return UVC_SUCCESS;
+	} else {
+		return ret;
+	}
+}
+
+uvc_error_t uvc_set_trigger_mode(uvc_device_handle_t *devh, uint8_t trigger_mode) {
+	uint8_t data[2];
+	uvc_error_t ret;
+
+	data[0] = trigger_mode;
+	data[1] = 0;
+
+	ret = libusb_control_transfer(devh->usb_devh, REQ_TYPE_SET, UVC_SET_CUR,
+			0x0b00,
+			0x0300,
+			data, sizeof(data), CTRL_TIMEOUT_MILLIS);
+
+	if (LIKELY(ret == sizeof(data))) {
+		__android_log_print(ANDROID_LOG_ERROR, "KRISOFT", "trigger ok!");
+		return UVC_SUCCESS;
+	} else {
+		__android_log_print(ANDROID_LOG_ERROR, "KRISOFT", "trigger %d error", ret);
+		return ret;
+	}
+}
+
+

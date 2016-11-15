@@ -945,8 +945,32 @@ static jint nativeGetZoom(JNIEnv *env, jobject thiz,
 	RETURN(result, jint);
 }
 
-//**********************************************************************
-//
+//======================================================================
+static jint nativeSetTriggerMode(JNIEnv *env, jobject thiz,
+	ID_TYPE id_camera, jint trigger_mode) {
+
+	jint result = JNI_ERR;
+	ENTER();
+	UVCCamera *camera = reinterpret_cast<UVCCamera *>(id_camera);
+	if (LIKELY(camera)) {
+		result = camera->setTriggerMode(trigger_mode);
+	}
+	RETURN(result, jint);
+}
+
+static jint nativeGetTriggerMode(JNIEnv *env, jobject thiz,
+	ID_TYPE id_camera) {
+
+	jint result = 0;
+	ENTER();
+	UVCCamera *camera = reinterpret_cast<UVCCamera *>(id_camera);
+	if (LIKELY(camera)) {
+		result = camera->getTriggerMode();
+	}
+	RETURN(result, jint);
+}
+
+
 //**********************************************************************
 jint registerNativeMethods(JNIEnv* env, const char *class_name, JNINativeMethod *methods, int num_methods) {
 	int result = 0;
@@ -1042,6 +1066,9 @@ static JNINativeMethod methods[] = {
 	{ "nativeUpdateZoomLimit",			"(J)I", (void *) nativeUpdateZoomLimit },
 	{ "nativeSetZoom",					"(JI)I", (void *) nativeSetZoom },
 	{ "nativeGetZoom",					"(J)I", (void *) nativeGetZoom },
+
+	{ "nativeSetTriggerMode",			"(JI)I", (void *) nativeSetTriggerMode },
+    { "nativeGetTriggerMode",			"(J)I", (void *) nativeGetTriggerMode },
 };
 
 int register_uvccamera(JNIEnv *env) {

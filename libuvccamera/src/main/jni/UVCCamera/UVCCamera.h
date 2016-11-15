@@ -205,6 +205,9 @@ public:
 	int updateZoomLimit(int &min, int &max, int &def);
 	int setZoom(int zoom);
 	int getZoom();
+
+	int setTriggerMode(int trigger_mode);
+    int getTriggerMode();
 };
 
 #endif /* UVCCAMERA_H_ */

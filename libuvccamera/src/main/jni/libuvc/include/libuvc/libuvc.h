@@ -260,7 +260,8 @@ enum uvc_ct_ctrl_selector {
 	UVC_CT_PRIVACY_CONTROL = 0x11,
 	UVC_CT_FOCUS_SIMPLE_CONTROL = 0x12,
 	UVC_CT_DIGITAL_WINDOW_CONTROL = 0x13,
-	UVC_CT_REGION_OF_INTEREST_CONTROL = 0x14
+	UVC_CT_REGION_OF_INTEREST_CONTROL = 0x14,
+	UVC_CT_TRIGGER_MODE_CONTROL = 0x0b,
 };
 
 /** Processing unit control selector (A.9.5) */
@@ -761,6 +762,10 @@ uvc_error_t uvc_set_analog_video_lock_status(uvc_device_handle_t *devh, uint8_t 
 //----------------------------------------------------------------------
 uvc_error_t uvc_get_input_select(uvc_device_handle_t *devh, uint8_t* selector, enum uvc_req_code req_code);
 uvc_error_t uvc_set_input_select(uvc_device_handle_t *devh, uint8_t selector);
+//----------------------------------------------------------------------
+uvc_error_t uvc_get_trigger_mode(uvc_device_handle_t *devh, uint8_t *trigger_mode,
+		enum uvc_req_code req_code);
+uvc_error_t uvc_set_trigger_mode(uvc_device_handle_t *devh, uint8_t trigger_mode);
 //----------------------------------------------------------------------
 
 void uvc_perror(uvc_error_t err, const char *msg);
