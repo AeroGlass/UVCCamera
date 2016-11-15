@@ -855,9 +855,26 @@ public class UVCCamera {
 //================================================================================
 
 //================================================================================
-	public synchronized void setTriggerMode(final int trigger_mode) {
+	public enum TRIGGER_MODE {
+		DISABLED(0),
+	    RISING_EDGE(1),
+		FAILING_EDGE(3);
+
+		private int numVal;
+
+		TRIGGER_MODE(int numVal) {
+			this.numVal = numVal;
+		}
+
+		public int getNumVal() {
+			return numVal;
+		}
+
+	}
+
+	public synchronized void setTriggerMode(final TRIGGER_MODE trigger_mode) {
 		if (mNativePtr != 0) {
-			nativeSetTriggerMode(mNativePtr, trigger_mode);
+			nativeSetTriggerMode(mNativePtr, trigger_mode.getNumVal());
 		}
 	}
 
