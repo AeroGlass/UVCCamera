@@ -116,6 +116,7 @@ public class UVCCamera {
     protected long mProcSupports;				// プロセッシングユニットでサポートしている機能フラグ
     protected int mCurrentPreviewMode = 0;
     protected String mSupportedSize;
+    protected boolean mPreviewSet;
 	// these fields from here are accessed from native code and do not change name and remove
     protected long mNativePtr;
     protected int mBrightnessMin, mBrightnessMax, mBrightnessDef;
@@ -157,9 +158,6 @@ public class UVCCamera {
     	if (mNativePtr != 0 && TextUtils.isEmpty(mSupportedSize)) {
     		mSupportedSize = nativeGetSupportedSize(mNativePtr);
     	}
-		if (nativeSetPreviewSize(mNativePtr, DEFAULT_PREVIEW_WIDTH, DEFAULT_PREVIEW_HEIGHT, DEFAULT_PREVIEW_MODE) != 0) {
-            return false;
-        }
         return true;
     }
 
@@ -199,8 +197,10 @@ public class UVCCamera {
 			throw new IllegalArgumentException("invalid preview size");
 		if (mNativePtr != 0) {
 			final int result = nativeSetPreviewSize(mNativePtr, width, height, mode);
-			if (result != 0)
+			if (result != 0) {
 				throw new IllegalArgumentException("Failed to set preview size");
+			}
+			mPreviewSet = true;
 			mCurrentPreviewMode = mode;
 		}
 	}
@@ -218,8 +218,10 @@ public class UVCCamera {
 			throw new IllegalArgumentException("invalid preview size");
 		if (mNativePtr != 0) {
 			final int result = nativeSetPreviewSizeFPS(mNativePtr, width, height, mode, minfps, maxfps);
-			if (result != 0)
+			if (result != 0) {
 				throw new IllegalArgumentException("Failed to set preview size");
+			}
+			mPreviewSet = true;
 			mCurrentPreviewMode = mode;
 		}
 	}
@@ -302,12 +304,15 @@ public class UVCCamera {
     /**
      * start preview
      */
-    public boolean startPreview() {
-    	if (mCtrlBlock != null) {
-    		return nativeStartPreview(mNativePtr) == 0;
-    	}
-        return false;
-    }
+	public boolean startPreview() {
+		if (mCtrlBlock != null) {
+			if (!mPreviewSet && nativeSetPreviewSize(mNativePtr, DEFAULT_PREVIEW_WIDTH, DEFAULT_PREVIEW_HEIGHT, DEFAULT_PREVIEW_MODE) != 0) {
+				return false;
+			}
+			return nativeStartPreview(mNativePtr) == 0;
+		}
+		return false;
+	}
 
     /**
      * stop preview
