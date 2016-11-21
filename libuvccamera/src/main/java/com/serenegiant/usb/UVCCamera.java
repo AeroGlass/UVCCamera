@@ -863,7 +863,7 @@ public class UVCCamera {
 	public enum TRIGGER_MODE {
 		DISABLED(0),
 	    RISING_EDGE(1),
-		FAILING_EDGE(3);
+		FALLING_EDGE(3);
 
 		private int numVal;
 
