@@ -335,18 +335,27 @@ int UVCPreview::stopPreview() {
 //
 //**********************************************************************
 void UVCPreview::uvc_preview_frame_callback(uvc_frame_t *frame, void *vptr_args) {
+
 	UVCPreview *preview = reinterpret_cast<UVCPreview *>(vptr_args);
 	if UNLIKELY(!preview->isRunning() || !frame || !frame->frame_format || !frame->data || !frame->data_bytes) return;
 	if (UNLIKELY(
 		((frame->frame_format != UVC_FRAME_FORMAT_MJPEG) && (frame->actual_bytes < preview->frameBytes))
 		|| (frame->width != preview->frameWidth) || (frame->height != preview->frameHeight) )) {
 
+		// NOTE: special case for leopard camera format where the camera reports wrong frame size but the data is still usable
+		if (preview->mPixelFormat == PIXEL_FORMAT_GREYLEOPARD && frame->actual_bytes == preview->frameBytes) {
+			frame->width = preview->frameWidth;
+			frame->height = preview->frameHeight;
+			frame->step = frame->width * 2;
+		} else {
 #if LOCAL_DEBUG
-		LOGD("broken frame!:format=%d,actual_bytes=%d/%d(%d,%d/%d,%d)",
-			frame->frame_format, frame->actual_bytes, preview->frameBytes,
-			frame->width, frame->height, preview->frameWidth, preview->frameHeight);
+			LOGE("broken frame!:format=%d,actual_bytes=%d/%d(%d,%d/%d,%d)",
+				frame->frame_format, frame->actual_bytes, preview->frameBytes,
+				frame->width, frame->height, preview->frameWidth, preview->frameHeight);
+
 #endif
-		return;
+			return;
+		}
 	}
 	if (LIKELY(preview->isRunning())) {
 		uvc_frame_t *copy = uvc_allocate_frame(frame->data_bytes);
@@ -435,9 +444,17 @@ int UVCPreview::prepare_preview(uvc_stream_ctrl_t *ctrl) {
 		uvc_frame_desc_t *frame_desc;
 		result = uvc_get_frame_desc(mDeviceHandle, ctrl, &frame_desc);
 		if (LIKELY(!result)) {
+			// NOTE: special case for leopard camera, it reports incorrect frame size so we just use the requested size
+			if (mPixelFormat == PIXEL_FORMAT_GREYLEOPARD) {
+				frameWidth = requestWidth;
+				frameHeight = requestHeight;
+			} else {
 			frameWidth = frame_desc->wWidth;
-			frameHeight = frame_desc->wHeight;
-			LOGI("frameSize=(%d,%d)@%s", frameWidth, frameHeight, (!requestMode ? "YUYV" : "MJPEG"));
+				frameHeight = frame_desc->wHeight;
+			}
+			LOGI("frameSize=(%d,%d%s)@%s", frameWidth, frameHeight,
+					mPixelFormat == PIXEL_FORMAT_GREYLEOPARD ? " + leopard-hack" : "",
+					(!requestMode ? "YUYV" : "MJPEG"));
 			pthread_mutex_lock(&preview_mutex);
 			if (LIKELY(mPreviewWindow)) {
 				ANativeWindow_setBuffersGeometry(mPreviewWindow,
@@ -517,19 +534,16 @@ void UVCPreview::do_preview(uvc_stream_ctrl_t *ctrl) {
 						uint8_t* out = (uint8_t*)frame->data;
 						uint8_t tmp;
 
-						for (int i=0; i<frame_yuyv->height; i++)
+						for (int i=0; i<frame_yuyv->height; i++) {
 							for (int j=0; j<frame_yuyv->width; j++)
 							{
 								tmp = (*data++) >> 4;
 								*out++ = (uint8_t) tmp;
 							}
+						}
 
 						uvc_free_frame(frame_yuyv);
-						if (LIKELY(!result)) {
-							addCaptureFrame(frame);
-						} else {
-							uvc_free_frame(frame);
-						}
+						addCaptureFrame(frame);
 					} else {
 						addCaptureFrame(frame_yuyv);
 					}
